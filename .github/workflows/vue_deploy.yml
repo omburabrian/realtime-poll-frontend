@@ -2,10 +2,9 @@ name: AWS DEPLOY TO STAGING
 
 #turn off deploy to AWS
 on:
-  pull_request:
-    types: [closed]
+  push:
     branches:
-      - dev
+      - feature/b-13499-deploy/aws-frontend-bo
 
 jobs:
   aws-deploy:
@@ -16,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: dev
+          ref: ${{ github.ref_name }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
