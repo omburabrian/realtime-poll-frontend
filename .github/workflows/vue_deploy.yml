@@ -2,12 +2,14 @@ name: AWS DEPLOY TO STAGING
 
 #turn off deploy to AWS
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
-      - feature/b-13499-deploy/aws-frontend-bo
+      - dev
 
 jobs:
   aws-deploy:
+    if: github.event.pull_request.merged == true # Only run if PR is merged
     runs-on: ubuntu-latest
     #For google auth
 
@@ -15,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref_name }}
+          ref: dev
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
