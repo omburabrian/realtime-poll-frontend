@@ -36,6 +36,6 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
           ARGS: "-rltgoDzvO --delete"
           SOURCE: "dist/"
-          REMOTE_HOST: "ec2-13-59-151-66.us-east-2.compute.amazonaws.com"
+          REMOTE_HOST: "ec2-3-133-87-51.us-east-2.compute.amazonaws.com"
           REMOTE_USER: ubuntu
           TARGET: "/var/www/html/realtime-poll-frontend"
