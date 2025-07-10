@@ -9,6 +9,12 @@ const router = useRouter();
 const user = ref(null);
 const title = ref("Real-time Poll");
 const logoURL = ref("");
+const adminMenuItems = ref([
+  { title: "Dashboard", name: "admin" },
+  { title: "Users", name: "admin-users" },
+  { title: "Database", name: "admin-database" },
+  { title: "Settings", name: "admin-settings" },
+]);
 
 onMounted(() => {
   logoURL.value = ocLogo;
@@ -54,9 +60,18 @@ function logout() {
       <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'ingredients' }">
         Ingredients
       </v-btn>
-      <v-btn v-if="(user !== null)  &&  (user.role === 'admin')" class="mx-2" :to="{ name: 'admin' }">
-        Admin
-      </v-btn>
+      <v-menu v-if="user !== null && user.role === 'admin'" location="bottom" rounded>
+        <template v-slot:activator="{ props }">
+          <v-btn class="mx-2" v-bind="props">
+            Admin <v-icon end>mdi-menu-down</v-icon>
+          </v-btn>
+        </template>
+        <v-list>
+          <v-list-item v-for="(item, index) in adminMenuItems" :key="index" :to="{ name: item.name }">
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
       <v-menu v-if="user !== null" min-width="200px" rounded>
         <template v-slot:activator="{ props }">
           <v-btn icon v-bind="props">
