@@ -11,13 +11,13 @@ const router = createRouter({
     {
       path: "/admin",
       name: "admin",
-      component: () => import("./views/Admin.vue"),
+      component: () => import("./views/admin/Admin.vue"),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
       path: "/admin/users",
       name: "admin-users",
-      component: () => import("./views/admin/Users.vue"),
+      component: () => import("./views/admin/UserList.vue"),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
@@ -32,6 +32,7 @@ const router = createRouter({
       component: () => import("./views/admin/Settings.vue"),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
+    //  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
     //  ToDo:  Remove RECIPE references
     {
       path: "/recipes",
@@ -49,6 +50,7 @@ const router = createRouter({
       name: "ingredients",
       component: () => import("./views/IngredientList.vue"),
     },
+    //  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   ],
 });
 

@@ -2,22 +2,21 @@
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
-
 const router = useRouter();
 
 const showDetails = ref(false);
 const user = ref(null);
 
-// const props = defineProps({
-//   recipe: {
-//     required: true,
-//   },
-// });
+const props = defineProps({
+  user: {
+    required: true,
+  },
+});
 
 onMounted(async () => {
   // await getRecipeIngredients();
   // await getRecipeSteps();
-  user.value = JSON.parse(localStorage.getItem("user"));
+  // user.value = JSON.parse(localStorage.getItem("user"));
 });
 
 /*
@@ -46,6 +45,7 @@ async function getRecipeSteps() {
 function navigateToEdit() {
   router.push({ name: "editRecipe", params: { id: props.recipe.id } });
 }
+  
 //  */
 
 </script>
@@ -58,7 +58,7 @@ function navigateToEdit() {
     <v-card-title class="headline">
       <v-row align="center">
         <v-col cols="10">
-          {{ user.lastName user.firstName }}
+          {{ user.lastName, user.firstName }}
           <v-chip class="ma-2" color="accent" label>
             <v-icon start icon="mdi-email-outline"></v-icon>
             {{ user.email }} 
