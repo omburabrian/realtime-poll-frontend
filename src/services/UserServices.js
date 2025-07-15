@@ -36,4 +36,12 @@ export default {
     return apiClient.get("roles");
   },
 
+  updateUser(id, data) {
+    return apiClient.put("users/" + id, data);
+  },
+
+  deleteUser(id) {
+    return apiClient.delete("users/" + id);
+  },
+
 };

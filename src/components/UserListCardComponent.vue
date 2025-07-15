@@ -1,5 +1,7 @@
-<script setup>
+D<script setup>
 import { onMounted, ref } from "vue";
+
+const showDetails = ref(false);
 
 //  This (user) is the logged in current user.
 //  Not the displayed user on the card, "aUser".
@@ -26,13 +28,13 @@ onMounted(async () => {
 });
 
 function updateUserRole(newRole) {
-  alert("Update user role");
-  //  emit("update-role", { userId: props.aUser.id, role: newRole });
+  //  alert("Update user role");
+  emit("update-role", { userId: props.aUser.id, role: newRole });
 }
 
 function deleteUser() {
-  alert("Delete user");
-  //  emit("delete-user", props.aUser.id);
+  //  alert("Delete user");
+  emit("delete-user", props.aUser.id);
 }
 
 function navigateToEdit() {
@@ -50,38 +52,30 @@ function navigateToEdit() {
   >
     <v-card-title class="headline">
       <v-row align="center">
-        <v-col cols="10">
+
+        <v-col cols="6" class="d-lg-3">
           {{ aUser.lastName }}, {{ aUser.firstName }}
           <v-chip class="ma-2" color="accent" label>
             <v-icon start icon="mdi-email-outline"></v-icon>
             {{ aUser.email }} 
           </v-chip>
         </v-col>
-        <v-col class="d-flex justify-end">
-          <v-icon
-            v-if="user !== null"
-            size="small"
-            icon="mdi-pencil"
-            @click="navigateToEdit()"
-          ></v-icon>
-        </v-col>
 
-        <v-col class="d-flex justify-end">
+        <v-col cols="3" class="d-lg-2">
           <v-select
             v-model="aUser.role"
-            :item-title="ROLE"
             :items="roles"
-            item-title="name"
-            item-value="name"
             label="Role"
             density="compact"
             hide-details
             @update:modelValue="updateUserRole"
+            @click.stop
             :disabled="user && user.id === aUser.id"
-
             ></v-select>
         </v-col>  
-        <v-col cols="4" sm="2" md="2" class="d-flex justify-end">
+
+        <v-col cols="1" class="d-lg-1 ml-auto mr-3">
+
           <v-icon
             v-if="user && user.id !== aUser.id"
             size="small"
@@ -90,16 +84,28 @@ function navigateToEdit() {
             @click.stop="deleteUser()"
             aria-label="Delete User"
           ></v-icon>
+
+          <v-icon
+            v-if="user !== null"
+            size="small"
+            icon="mdi-pencil"
+            class="ml-4"
+            @click.stop="navigateToEdit()"
+          ></v-icon>
+
         </v-col>
 
       </v-row>
     </v-card-title>
     <v-card-text class="body-1">
-      Username: {{ aUser.userName }}
+      Username: &nbsp; {{ aUser.userName }}
     </v-card-text>
     <v-expand-transition>
       <v-card-text class="pt-0" v-show="showDetails">
         <h3>User Details</h3>
+        (User detail line 1) <br>
+        (User detail line 2) <br>
+        (User detail line 3)
       </v-card-text>
     </v-expand-transition>
   </v-card>
