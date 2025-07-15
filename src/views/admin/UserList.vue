@@ -14,18 +14,21 @@ const snackbar = ref({
   text: "",
 });
 
+//----------------------------------------------------------------
 onMounted(async () => {
   await getUsers();
   user.value = JSON.parse(localStorage.getItem("user"));
+  //  console.log(user.value);
 });
 
+//----------------------------------------------------------------
 //  Get users.  ToDo:  paginate
 async function getUsers() {
 
   await UserServices.getUsers()
     .then((response) => {
-      users.value = response.data.users;
-      //  console.log(users.value);
+      users.value = response.data;
+      console.log(users.value);
     })
     .catch((error) => {
       console.log(error);
@@ -35,9 +38,11 @@ async function getUsers() {
     });
 }
 
+//----------------------------------------------------------------
 function closeSnackBar() {
   snackbar.value.value = false;
 }
+//----------------------------------------------------------------
 </script>
 
 <template>
@@ -55,7 +60,7 @@ function closeSnackBar() {
       <UserCard
         v-for="aUser in users"
         :key="aUser.id"
-        :user="aUser"
+        :aUser="aUser"
         @deletedList="getLists()"
       />
 

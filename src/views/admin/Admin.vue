@@ -1,8 +1,8 @@
 <script setup>
 import { onMounted } from "vue";
 import { ref } from "vue";
-//  import UserCard from "../../components/UserListCardComponent.vue";
-import AdminServices from "../../services/AdminServices.js";
+import UserCard from "../../components/UserListCardComponent.vue";
+//  import AdminServices from "../../services/AdminServices.js";
 import UserServices from "../../services/UserServices.js";
 
 const user = ref(null);

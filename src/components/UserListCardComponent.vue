@@ -5,10 +5,13 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 const showDetails = ref(false);
+
+//  This (user) is the logged in current user.
+//  Not the displayed user on the card, "aUser".
 const user = ref(null);
 
 const props = defineProps({
-  user: {
+  aUser: {
     required: true,
   },
 });
@@ -58,10 +61,10 @@ function navigateToEdit() {
     <v-card-title class="headline">
       <v-row align="center">
         <v-col cols="10">
-          {{ user.lastName, user.firstName }}
+          {{ aUser.lastName }}, {{ aUser.firstName }}
           <v-chip class="ma-2" color="accent" label>
             <v-icon start icon="mdi-email-outline"></v-icon>
-            {{ user.email }} 
+            {{ aUser.email }} 
           </v-chip>
         </v-col>
         <v-col class="d-flex justify-end">
@@ -75,7 +78,7 @@ function navigateToEdit() {
       </v-row>
     </v-card-title>
     <v-card-text class="body-1">
-      {{ user.userName - user.role }}
+      {{ aUser.userName }} - {{ aUser.role }}
     </v-card-text>
     <v-expand-transition>
       <v-card-text class="pt-0" v-show="showDetails">
