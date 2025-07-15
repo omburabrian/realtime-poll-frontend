@@ -32,4 +32,8 @@ export default {
     return apiClient.get("users");
   },
 
+  getRoles() {
+    return apiClient.get("roles");
+  },
+
 };
