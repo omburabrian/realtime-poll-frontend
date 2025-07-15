@@ -24,6 +24,11 @@ const router = createRouter({
       name: "ingredients",
       component: () => import("./views/IngredientList.vue"),
     },
+    {
+      path: "/polls",
+      name: "polls",
+      component: () => import("./views/PollList.vue"),
+    },
   ],
 });
 
