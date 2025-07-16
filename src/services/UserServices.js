@@ -32,8 +32,8 @@ export default {
     return apiClient.get("users");
   },
 
-  getRoles() {
-    return apiClient.get("roles");
+  getUserRoles() {
+    return apiClient.get("user-roles");
   },
 
   updateUser(id, data) {

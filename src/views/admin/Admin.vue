@@ -1,12 +1,10 @@
 <script setup>
 import { onMounted } from "vue";
 import { ref } from "vue";
-import UserCard from "../../components/UserListCardComponent.vue";
-//  import AdminServices from "../../services/AdminServices.js";
-import UserServices from "../../services/UserServices.js";
+import AdminServices from "../../services/AdminServices.js";
 
 const user = ref(null);
-const users = ref([]);
+const dashboardData = ref(null);
 
 const snackbar = ref({
   value: false,
@@ -15,15 +13,14 @@ const snackbar = ref({
 });
 
 onMounted(async () => {
-  await getUsers();
+  await getDashboardData();
   user.value = JSON.parse(localStorage.getItem("user"));
 });
 
-async function getUsers() {
-  await UserServices.getUsers()
+async function getDashboardData() {
+  await AdminServices.getDashboardData()
     .then((response) => {
-      users.value = response.data.users;
-      //  console.log(users.value);
+      dashboardData.value = response.data;
     })
     .catch((error) => {
       console.log(error);
@@ -31,7 +28,7 @@ async function getUsers() {
         snackbar.value.color = "error";
         snackbar.value.text = error.response.data.message;
     });
-}""
+}
 
 function closeSnackBar() {
   snackbar.value.value = false;
@@ -51,12 +48,11 @@ function closeSnackBar() {
         </v-col>
       </v-row>
 
-      <UserCard
-        v-for="aUser in users"
-        :key="aUser.id"
-        :user="aUser"
-        @deletedList="getLists()"
-      />
+      <v-row align="center" class="mb-4">
+        <v-col cols="10">
+          {{ dashboardData }}
+        </v-col>
+      </v-row>
 
       <v-snackbar v-model="snackbar.value" rounded="pill">
         {{ snackbar.text }}
