@@ -2,10 +2,11 @@ import apiClient from "./services";
 
 export default {
 
-  getUser() {
-    return apiClient.get("users");
+  getDashboardData() {
+    return apiClient.get("admin");
   },
 
+  /*
   addUser(user) {
     return apiClient.post("users", user);
   },
@@ -27,21 +28,6 @@ export default {
   logoutUser() {
     return apiClient.post("logout");
   },
-  
-  getUsers() {
-    return apiClient.get("users");
-  },
-
-  getRoles() {
-    return apiClient.get("roles");
-  },
-
-  updateUser(id, data) {
-    return apiClient.put("users/" + id, data);
-  },
-
-  deleteUser(id) {
-    return apiClient.delete("users/" + id);
-  },
+//  */
 
 };
