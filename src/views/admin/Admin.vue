@@ -50,7 +50,9 @@ function closeSnackBar() {
 
       <v-row align="center" class="mb-4">
         <v-col cols="10">
-          {{ dashboardData }}
+          <pre>
+{{ dashboardData }}
+          </pre>
         </v-col>
       </v-row>
 
