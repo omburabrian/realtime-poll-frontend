@@ -10,4 +10,8 @@ export default {
     return apiClient.post("admin/load-test-data/users");
   },
 
+  loadTestData_pollsQuestionsAnswers() {
+    return apiClient.post("/admin/load-test-data/polls");
+  },
+
 };

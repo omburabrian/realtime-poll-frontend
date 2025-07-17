@@ -22,19 +22,31 @@ async function loadTestData_users() {
       console.log(response);
       snackbar.value.value = true;
       snackbar.value.color = "green";
-      //  snackbar.value.text = response.data.message;
-      snackbar.value.text = response?.data?.message || "Test data loaded successfully for users";
+      snackbar.value.text = response?.data?.message || "Test data loaded successfully for USERS";
     })
     .catch((error) => {
       console.log(error);
       snackbar.value.value = true;
       snackbar.value.color = "error";
-      snackbar.value.text = error.response?.data?.message || "Error loading test data for users";
+      snackbar.value.text = error.response?.data?.message || "Error loading test data for USERS";
     });
 }
 
-function loadTestData_polls() {
-  alert("loadTestData_polls");
+async function loadTestData_pollsQuestionsAnswers() {
+
+  await AdminServices.loadTestData_pollsQuestionsAnswers()
+    .then((response) => {
+      console.log(response);
+      snackbar.value.value = true;
+      snackbar.value.color = "green";
+      snackbar.value.text = response?.data?.message || "Test data loaded successfully for POLLS";
+    })
+    .catch((error) => {
+      console.log(error);
+      snackbar.value.value = true;
+      snackbar.value.color = "error";
+      snackbar.value.text = error.response?.data?.message || "Error loading test data for POLLS";
+    });
 }
 
 function closeSnackBar() {
@@ -64,7 +76,7 @@ function closeSnackBar() {
               </v-btn>
               <v-spacer></v-spacer>
 
-              <v-btn variant="flat" color="primary" class="mb-2" @click="loadTestData_polls()">
+              <v-btn variant="flat" color="primary" class="mb-2" @click="loadTestData_pollsQuestionsAnswers()">
                 Load Polls (Quizes)
               </v-btn>
 
