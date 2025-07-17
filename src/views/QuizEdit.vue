@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from "vue";
+import { de } from "vuetify/locale";
 //const user = ref(null);
 const questions = ref([
   {
@@ -89,11 +90,10 @@ const questions = ref([
 ]);
 
 const newQuestion = ref({
-  id: undefined,
-  name: undefined,
-  number: undefined,
-  questionType: undefined,
-  answers: undefined,
+  name: "",
+  number: 0,
+  questionType: "Multiple-Choice",
+  answers: [{ text: "", isCorrect: false }],
 });
 //const answers = ref([]);
 const addQuestionDialog = ref(false);
@@ -104,37 +104,16 @@ const snackbar = ref({
   text: "",
 });
 
-function addQuestion() {
-  newQuestion.value = {
-    text: "",
-    questionType: "Multiple-Choice",
-    answers: [{ text: "", isCorrect: false }],
-  };
-}
 function submitQuiz() {
   // This is where you would send the quiz and questions to the backend
   console.log("Quiz submitted with questions:", questions.value);
 }
-function openQuestionDialog() {
-  addQuestionDialog.value = true;
-  // addQuestion();
-  editQuestionDialog.value = false;
-}
+// function openQuestionDialog() {
+//   addQuestionDialog.value = true;
+//   // addQuestion();
+//   //editQuestionDialog.value = false;
+// }
 
-function closeAddQuestionDialog() {
-  newQuestion.value.name = "";
-  newQuestion.value.number = undefined;
-  newQuestion.value.questionType = "";
-  //newQuestion.value.answers = item.answers;
-  addQuestionDialog.value = false;
-}
-function closeEditQuestionDialog() {
-  // newQuestion.value.name = newQuestion.value.name;
-  // newQuestion.value.number = newQuestion.value.number;
-  // newQuestion.value.questionType = newQuestion.value.questionType;
-  // newQuestion.value.answers = newQuestion.value.answers;
-  editQuestionDialog.value = false;
-}
 function addAnswer(qIndex) {
   questions.value[qIndex].answers.push({ text: "", isCorrect: false });
 }
@@ -154,14 +133,6 @@ function deleteQuestion(item) {
     snackbar.value.color = "error";
     snackbar.value.text = "Error deleting question.";
   }
-}
-function editQuestion(item) {
-  newQuestion.value.name = item.name;
-  newQuestion.value.number = item.number;
-  newQuestion.value.questionType = item.questionType;
-  newQuestion.value.answers = item.answers;
-  addQuestionDialog.value = false;
-  editQuestionDialog.value = true;
 }
 function saveQuestion() {
   if (addQuestionDialog.value) {
@@ -187,6 +158,34 @@ function saveQuestion() {
   addQuestionDialog.value = false;
   editQuestionDialog.value = false;
 }
+
+function addQuestion() {
+  delete newQuestion.value.number;
+  delete newQuestion.value.name;
+  delete newQuestion.value.answers;
+  delete newQuestion.value.questionType;
+  newQuestion.value.text = "";
+  newQuestion.value.questionType = "";
+  newQuestion.value.answers = [{ text: "", isCorrect: false }];
+  addQuestionDialog.value = true;
+}
+function closeAddQuestion() {
+  addQuestionDialog.value = false;
+}
+function editQuestion(item) {
+  newQuestion.value.name = item.name;
+  newQuestion.value.number = item.number;
+  newQuestion.value.questionType = item.questionType;
+  newQuestion.value.answers = item.answers;
+  editQuestionDialog.value = true;
+}
+
+function closeEditQuestion() {
+  editQuestionDialog.value = false;
+}
+function closeSnackBar() {
+  snackbar.value.value = false;
+}
 </script>
 <template>
   <v-container>
@@ -207,7 +206,7 @@ function saveQuestion() {
         <v-btn
           v-if="user !== null"
           color="primary"
-          @click="openQuestionDialog()"
+          @click="addQuestion()"
           density="compact"
           class="mr-5"
           >Add Question</v-btn
@@ -276,7 +275,7 @@ function saveQuestion() {
             </tr>
           </tbody>
         </v-table>
-        <div v-else>No questions in poll to display</div>
+        <div v-else>No data to display</div>
       </v-col>
 
       <v-col cols="2">
@@ -311,7 +310,7 @@ function saveQuestion() {
                   label="Question"
                 ></v-text-field>
                 <v-text-field
-                  v-model="newQuestion.number"
+                  v-model.number="newQuestion.number"
                   label="Question Number"
                   type="number"
                   max="10"
@@ -352,8 +351,12 @@ function saveQuestion() {
             </v-card-text>
             <v-card-actions>
               <v-if v-if="addQuestionDialog">
-                <v-btn variant="flat" color="primary" @click="" class="ml-4"
-                  >Add Next Question</v-btn
+                <v-btn
+                  variant="text"
+                  color="primary"
+                  @click="addQuestion()"
+                  class="ml-4"
+                  >Add Another Question</v-btn
                 >
               </v-if>
               <v-spacer />
@@ -364,9 +367,9 @@ function saveQuestion() {
                 color="primary"
                 @click="
                   addQuestionDialog
-                    ? closeAddQuestionDialog()
+                    ? closeAddQuestion()
                     : editQuestionDialog
-                    ? closeEditQuestionDialog()
+                    ? closeEditQuestion()
                     : false
                 "
                 >Close</v-btn
