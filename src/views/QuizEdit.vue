@@ -1,7 +1,37 @@
 <script setup>
-import { ref } from "vue";
-import { de } from "vuetify/locale";
-//const user = ref(null);
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import QuizEditServices from "../services/QuizEditServices";
+
+const route = useRoute();
+const pollId = route.params.id;
+const poll = ref({});
+const user = ref(null);
+
+onMounted(async () => {
+  user.value = JSON.parse(localStorage.getItem("user"));
+  await getPoll();
+});
+
+const snackbar = ref({
+  value: false,
+  color: "",
+  text: "",
+});
+
+async function getPoll() {
+  await QuizEditServices.getPoll(pollId)
+    .then((response) => {
+      poll.value = response.data[0];
+    })
+    .catch((error) => {
+      console.log(error);
+      snackbar.value.value = true;
+      snackbar.value.color = "error";
+      snackbar.value.text = error.response.data.message;
+    });
+}
+
 const questions = ref([
   {
     number: 1,
@@ -23,86 +53,19 @@ const questions = ref([
       { text: "5", isCorrect: false },
     ],
   },
-  {
-    number: 3,
-    name: "Describe your favorite book.",
-    questionType: "Open-Ended",
-    answers: [],
-  },
-  {
-    number: 4,
-    name: "Which language is primarily used for Android development?",
-    questionType: "Multiple-Choice",
-    answers: [
-      { text: "Kotlin", isCorrect: true },
-      { text: "Swift", isCorrect: false },
-      { text: "Ruby", isCorrect: false },
-    ],
-  },
-  {
-    number: 5,
-    name: "Name one personal goal you have for this year.",
-    questionType: "Open-Ended",
-    answers: [],
-  },
-  {
-    number: 6,
-    name: "What color is the sky on a clear day?",
-    questionType: "Multiple-Choice",
-    answers: [
-      { text: "Blue", isCorrect: true },
-      { text: "Green", isCorrect: false },
-      { text: "Red", isCorrect: false },
-    ],
-  },
-  {
-    number: 7,
-    name: "What's your preferred method of learning new tech?",
-    questionType: "Open-Ended",
-    answers: [],
-  },
-  {
-    number: 8,
-    name: "Which of these is a JavaScript framework?",
-    questionType: "Multiple-Choice",
-    answers: [
-      { text: "Vue", isCorrect: true },
-      { text: "Laravel", isCorrect: false },
-      { text: "Django", isCorrect: false },
-    ],
-  },
-  {
-    number: 9,
-    name: "Who wrote 'Romeo and Juliet'?",
-    questionType: "Multiple-Choice",
-    answers: [
-      { text: "William Shakespeare", isCorrect: true },
-      { text: "Jane Austen", isCorrect: false },
-      { text: "Mark Twain", isCorrect: false },
-    ],
-  },
-  {
-    number: 10,
-    name: "Explain what REST API means.",
-    questionType: "Open-Ended",
-    answers: [],
-  },
 ]);
 
-const newQuestion = ref({
-  name: "",
-  number: 0,
-  questionType: "Multiple-Choice",
-  answers: [{ text: "", isCorrect: false }],
-});
+const newQuestions = ref([
+  {
+    name: "",
+    number: 0,
+    questionType: "Multiple-Choice",
+    answers: [{ text: "", isCorrect: false }],
+  },
+]);
 //const answers = ref([]);
 const addQuestionDialog = ref(false);
 const editQuestionDialog = ref(false);
-const snackbar = ref({
-  value: false,
-  color: "",
-  text: "",
-});
 
 function submitQuiz() {
   // This is where you would send the quiz and questions to the backend
@@ -135,48 +98,59 @@ function deleteQuestion(item) {
   }
 }
 function saveQuestion() {
-  if (addQuestionDialog.value) {
-    questions.value.push(newQuestion.value);
-    snackbar.value.value = true;
-    snackbar.value.color = "green";
-    snackbar.value.text = "Question added successfully!";
-  } else if (editQuestionDialog.value) {
+  const isAddMode = addQuestionDialog.value;
+  const isEditMode = editQuestionDialog.value;
+
+  if (isAddMode) {
+    // Add new question
+    questions.value.push({
+      ...newQuestions.value,
+      number: questions.value.length + 1,
+    });
+    showSnackbar("Question added successfully!", "green");
+  } else if (isEditMode) {
+    // Update existing question
     const index = questions.value.findIndex(
-      (q) => q.number === newQuestion.value.number
+      (q) => q.number === newQuestions.value.number
     );
-    if (index !== -1) {
-      questions.value[index] = newQuestion.value;
-      snackbar.value.value = true;
-      snackbar.value.color = "green";
-      snackbar.value.text = "Question updated successfully!";
+    if (index >= 0) {
+      questions.value[index] = { ...newQuestions.value };
+      showSnackbar("Question updated successfully!", "green");
     } else {
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = "Error updating question.";
+      showSnackbar("Error updating question.", "error");
     }
   }
+
+  // Reset dialogs
   addQuestionDialog.value = false;
   editQuestionDialog.value = false;
 }
 
+// Helper function for snackbar
+function showSnackbar(text, color) {
+  snackbar.value = { value: true, color, text };
+}
+function addAnotherQuestion() {
+  //TODO: Implement logic to add another question
+}
 function addQuestion() {
-  delete newQuestion.value.number;
-  delete newQuestion.value.name;
-  delete newQuestion.value.answers;
-  delete newQuestion.value.questionType;
-  newQuestion.value.text = "";
-  newQuestion.value.questionType = "";
-  newQuestion.value.answers = [{ text: "", isCorrect: false }];
+  delete newQuestions.value.number;
+  delete newQuestions.value.name;
+  delete newQuestions.value.answers;
+  delete newQuestions.value.questionType;
+  newQuestions.value.text = "";
+  newQuestions.value.questionType = "";
+  newQuestions.value.answers = [{ text: "", isCorrect: false }];
   addQuestionDialog.value = true;
 }
 function closeAddQuestion() {
   addQuestionDialog.value = false;
 }
 function editQuestion(item) {
-  newQuestion.value.name = item.name;
-  newQuestion.value.number = item.number;
-  newQuestion.value.questionType = item.questionType;
-  newQuestion.value.answers = item.answers;
+  newQuestions.value.name = item.name;
+  newQuestions.value.number = item.number;
+  newQuestions.value.questionType = item.questionType;
+  newQuestions.value.answers = item.answers;
   editQuestionDialog.value = true;
 }
 
@@ -198,8 +172,12 @@ function closeSnackBar() {
 
       <v-col cols="12">
         <v-form>
-          <v-text-field label="Quiz Name"></v-text-field>
-          <v-textarea label="Description" rows="3"></v-textarea>
+          <v-text-field label="Quiz Name" v-model="poll.name"></v-text-field>
+          <v-textarea
+            label="Description"
+            v-model="poll.description"
+            rows="3"
+          ></v-textarea>
         </v-form>
       </v-col>
       <v-col>
@@ -297,29 +275,31 @@ function closeSnackBar() {
                 ? "Edit Question"
                 : ""
             }}</v-card-title>
+
             <v-card-text>
-              <div>
+              <div v-for="(question, qIndex) in newQuestions" :key="qIndex">
                 <v-select
-                  v-model="newQuestion.questionType"
-                  :items="['Multiple-Choice', 'Open-Ended']"
+                  v-model="newQuestions.questionType"
+                  :items="['Multiple-Choice', 'Open-Ended', 'True/False']"
                   label="Question Type"
                   class="mb-2"
                 ></v-select>
                 <v-text-field
-                  v-model="newQuestion.name"
+                  v-model="newQuestions.name"
                   label="Question"
                 ></v-text-field>
-                <v-text-field
-                  v-model.number="newQuestion.number"
+                <!-- <v-text-field
+                  v-model.number="newQuestions.number"
                   label="Question Number"
                   type="number"
+                  hidden
                   max="10"
                   min="1"
-                ></v-text-field>
+                ></v-text-field> -->
 
-                <div v-if="newQuestion.questionType === 'Multiple-Choice'">
+                <div v-if="newQuestions.questionType === 'Multiple-Choice'">
                   <div
-                    v-for="(answer, id) in newQuestion.answers"
+                    v-for="(answer, id) in newQuestions.answers"
                     :key="id"
                     class="d-flex align-center mb-3"
                   >
@@ -354,16 +334,19 @@ function closeSnackBar() {
                 <v-btn
                   variant="text"
                   color="primary"
-                  @click="addQuestion()"
+                  @click="addAnotherQuestion()"
                   class="ml-4"
-                  >Add Another Question</v-btn
+                  hidden
+                  ><v-icon icon="mdi-plus" start></v-icon> Add Another
+                  Question</v-btn
                 >
               </v-if>
               <v-spacer />
+
               <v-btn variant="flat" color="primary" @click="saveQuestion()">
-                Save
-                <v-icon icon="mdi-checkbox-marked-circle" end></v-icon></v-btn
-              ><v-btn
+                {{ editQuestionDialog ? "Update Question" : "Save" }}
+              </v-btn>
+              <v-btn
                 color="primary"
                 @click="
                   addQuestionDialog

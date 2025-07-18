@@ -33,9 +33,14 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
-      path: "/quizEdit",
+      path: "/quizEdit/:id",
       name: "quizEdit",
       component: () => import("./views/QuizEdit.vue"),
+    },
+    {
+      path: "/poll",
+      name: "poll",
+      component: () => import("./views/Poll.vue"),
     },
     //  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
     //  ToDo:  Remove RECIPE references
