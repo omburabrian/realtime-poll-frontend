@@ -1,45 +1,41 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import RecipeIngredientServices from "../services/RecipeIngredientServices.js";
-import RecipeStepServices from "../services/RecipeStepServices";
-import RecipeReports from "../reports/RecipeReports.js";
+import PollQuestionServices from "../services/PollQuestionServices.js";
+import PollReports from "../reports/PollReports.js";
 
 const router = useRouter();
 
 const showDetails = ref(false);
-const recipeIngredients = ref([]);
-const recipeSteps = ref([]);
+const pollQuestions = ref([]);
 const user = ref(null);
 
 const props = defineProps({
-  recipe: {
+  poll: {
     required: true,
   },
 });
 
 onMounted(async () => {
-  await getRecipeIngredients();
-  await getRecipeSteps();
+  await getPollQuestions();
   user.value = JSON.parse(localStorage.getItem("user"));
 });
 
-async function getRecipeIngredients() {
-  await RecipeIngredientServices.getRecipeIngredientsForRecipe(props.recipe.id)
+async function getPollQuestions() {
+  await PollQuestionServices.getPollQuestionsForPoll(props.poll.id)
     .then((response) => {
-      recipeIngredients.value = response.data;
+      pollQuestions.value = response.data;
+      console.log(pollQuestions.value);
     })
     .catch((error) => {
       console.log(error);
     });
 }
 
-async function getRecipeSteps() {
-  await RecipeStepServices.getRecipeStepsForRecipeWithIngredients(
-    props.recipe.id
-  )
+async function getAnswers(questionId) {
+  return PollQuestionServices.getPollQuestionAnswers(questionId)
     .then((response) => {
-      recipeSteps.value = response.data;
+      return response.data;
     })
     .catch((error) => {
       console.log(error);
@@ -47,7 +43,7 @@ async function getRecipeSteps() {
 }
 
 function navigateToEdit() {
-  router.push({ name: "editRecipe", params: { id: props.recipe.id } });
+  router.push({ name: "editPoll", params: { id: props.poll.id } });
 }
 </script>
 
@@ -59,14 +55,14 @@ function navigateToEdit() {
     <v-card-title class="headline">
       <v-row align="center">
         <v-col cols="10">
-          {{ recipe.name }}
+          {{ poll.name }}
           <v-chip class="ma-2" color="primary" label>
             <v-icon start icon="mdi-account-circle-outline"></v-icon>
-            {{ recipe.servings }} Servings
+            {{ poll.schoolGroup }} 
           </v-chip>
           <v-chip class="ma-2" color="accent" label>
             <v-icon start icon="mdi-clock-outline"></v-icon>
-            {{ recipe.time }} minutes
+            {{ poll.timePerQuestion }} minutes per question
           </v-chip>
         </v-col>
         <v-col class="d-flex justify-end">
@@ -74,7 +70,7 @@ function navigateToEdit() {
             v-if="user !== null"
             size="small"
             icon="mdi-file-pdf-box"
-            @click.stop="RecipeReports.generateRecipePDF(recipe)"
+            @click.stop="PollReports.generatePollCSV(poll)"
           ></v-icon>
           <v-icon
             v-if="user !== null"
@@ -86,49 +82,39 @@ function navigateToEdit() {
       </v-row>
     </v-card-title>
     <v-card-text class="body-1">
-      {{ recipe.description }}
+      {{ poll.description }}
     </v-card-text>
     <v-expand-transition>
       <v-card-text class="pt-0" v-show="showDetails">
-        <h3>Ingredients</h3>
-        <v-list>
-          <v-list-item
-            v-for="recipeIngredient in recipeIngredients"
-            :key="recipeIngredient.id"
-          >
-            <b
-              >{{ recipeIngredient.quantity }}
-              {{
-                `${recipeIngredient.ingredient.unit}${
-                  recipeIngredient.quantity > 1 ? "s" : ""
-                }`
-              }}</b
-            >
-            of {{ recipeIngredient.ingredient.name }} (${{
-              recipeIngredient.ingredient.pricePerUnit
-            }}/{{ recipeIngredient.ingredient.unit }})
-          </v-list-item>
-        </v-list>
-        <h3>Recipe Steps</h3>
+        <h3>Questions</h3>
         <v-table>
           <thead>
             <tr>
-              <th class="text-left">Step</th>
-              <th class="text-left">Instruction</th>
-              <th class="text-left">Ingredients</th>
+              <th class="text-left">Question</th>
+              <th class="text-left">Answers</th>
+              <th class="text-left">Correct Answer</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="step in recipeSteps" :key="step.id">
-              <td>{{ step.stepNumber }}</td>
-              <td>{{ step.instruction }}</td>
+            <tr v-for="question in pollQuestions" :key="question.id">
+              <td>{{ question.questionNumber + ". " + question.text }}</td>
+              <td>
+                <v-chip
+                  v-for="answer in getAnswers(question.id)"
+                  console.log(answer)
+                  :key="answer.id"
+                  size="small"
+                  class="ma-1"
+                  color="secondary"
+                >
+                  {{ answer.text }}
+                </v-chip></td>
+              <td>{{ question.text }}</td>
               <td>
                 <v-chip
                   size="small"
-                  v-for="ingredient in step.recipeIngredient"
-                  :key="ingredient.id"
                   pill
-                  >{{ ingredient.ingredient.name }}</v-chip
+                  >{{ question.questionType }}</v-chip
                 >
               </td>
             </tr>

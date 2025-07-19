@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted } from "vue";
 import { ref } from "vue";
-import RecipeCard from "../components/PollCardComponent.vue";
+import PollCard from "../components/PollCardComponent.vue";
 import PollServices from "../services/PollServices.js";
 
 const polls = ref([]);
@@ -15,7 +15,7 @@ const snackbar = ref({
 const newPoll = ref({
   name: "",
   description: "",
-  schoolGroup: 0,
+  schoolGroup: "",
   timePerQuestion: "30",
   isPublished: false,
 });
@@ -99,7 +99,7 @@ function closeSnackBar() {
         </v-col>
       </v-row>
 
-      <RecipeCard
+      <PollCard
         v-for="poll in polls"
         :key="poll.id"
         :poll="poll"
@@ -117,9 +117,8 @@ function closeSnackBar() {
             ></v-text-field>
 
             <v-text-field
-              v-model.number="newPoll.schoolGroup"
+              v-model="newPoll.schoolGroup"
               label="Class/Group"
-              type="number"
             ></v-text-field>
             <v-text-field
               v-model.number="newPoll.timePerQuestion"
