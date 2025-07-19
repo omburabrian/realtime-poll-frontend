@@ -1,15 +1,15 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import QuizEditServices from "../services/QuizEditServices";
+import PollServices from "../services/PollServices";
 
 const user = ref(null);
 const polls = ref([]);
 const router = useRouter();
 
 onMounted(async () => {
-  await getPolls();
   user.value = JSON.parse(localStorage.getItem("user"));
+  await getPolls(user.value.id);
 });
 const snackbar = ref({
   value: false,
@@ -17,8 +17,8 @@ const snackbar = ref({
   text: "",
 });
 
-async function getPolls() {
-  await QuizEditServices.getPolls()
+async function getPolls(userId) {
+  await PollServices.getPolls(userId)
     .then((response) => {
       polls.value = response.data;
     })
