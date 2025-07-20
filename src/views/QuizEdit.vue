@@ -6,7 +6,7 @@ import QuestionServices from "../services/QuestionServices";
 import AnswerServices from "../services/AnswerServices";
 
 const route = useRoute();
-const pollId = route.params.id; //get the poll ID from the route parameters
+const pollId = route.params.id;
 const poll = ref({});
 const user = ref(null);
 const questions = ref([]);
@@ -14,11 +14,12 @@ const addQuestionDialog = ref(false);
 const editQuestionDialog = ref(false);
 
 const newQuestion = ref({
-  name: "",
+  text: "",
   questionType: "",
-  answers: [{ text: "", isCorrect: false }],
+  answers: [{ text: "", isCorrectAnswer: false }],
 });
 
+//load user data from localStorage, get poll details, questions, and answers on component mount
 onMounted(async () => {
   user.value = JSON.parse(localStorage.getItem("user"));
   await getPoll();
@@ -26,13 +27,14 @@ onMounted(async () => {
   await getAnswers();
 });
 
+//snackbar logic
 const snackbar = ref({
   value: false,
   color: "",
   text: "",
 });
 
-//get the poll details with the poll ID
+//get the poll details with the pollID
 async function getPoll() {
   await PollServices.getPoll(pollId)
     .then((response) => {
@@ -46,7 +48,7 @@ async function getPoll() {
     });
 }
 
-//get poll questions
+//get the poll questions
 async function getQuestions() {
   await QuestionServices.getQuestionsForPoll(pollId)
     .then((response) => {
@@ -60,7 +62,7 @@ async function getQuestions() {
     });
 }
 
-//get answers for poll questions
+//get answers for the poll questions
 async function getAnswers() {
   try {
     for (const question of questions.value) {
@@ -75,7 +77,7 @@ async function getAnswers() {
   }
 }
 
-//update the quiz/poll
+//update the poll name and description
 async function updateQuiz() {
   try {
     await PollServices.updatePoll(poll.value.id, poll.value).then(() => {
@@ -93,15 +95,41 @@ async function updateQuiz() {
   await getPoll();
 }
 
-//update question and its answers
+//update question and its answers after editing
 async function updateQuestionAndAnswer() {
   try {
-    await QuestionServices.updateQuestionInPoll(
+    const questionData = {
+      text: newQuestion.value.text,
+      questionType: newQuestion.value.questionType,
+      pollId: pollId,
+    };
+
+    await QuestionServices.updateQuestionAndAnswer(
       newQuestion.value.id,
-      newQuestion.value
+      questionData
     );
-    for (const answer of newQuestion.value.answers) {
-      await AnswerServices.updateAnswerInQuestion(answer.id, answer);
+
+    for (const [index, answer] of newQuestion.value.answers.entries()) {
+      const answerData = {
+        text: answer.text,
+        isCorrectAnswer: answer.isCorrectAnswer,
+        answerIndex: index,
+        questionId: newQuestion.value.id,
+      };
+
+      //update an answer if it exists, otherwise create a new one
+      if (answer.id) {
+        await AnswerServices.updateQuestionAndAnswer(answer.id, {
+          id: answer.id,
+          ...answerData,
+        });
+
+        //debug
+        console.log("Answer updated:", answerData);
+      } else {
+        await AnswerServices.createAnswer(newQuestion.value.id, answerData);
+        console.log("Answer created:", answerData);
+      }
     }
     snackbar.value.value = true;
     snackbar.value.color = "green";
@@ -117,15 +145,32 @@ async function updateQuestionAndAnswer() {
   editQuestionDialog.value = false;
 }
 
+//add an answer text-field to the question dialog
 function addAnswer(qIndex) {
-  questions.value[qIndex].answers.push({ text: "", isCorrect: false });
+  qIndex.answers.push({ text: "", isCorrectAnswer: false });
 }
 
-function removeAnswer(qIndex, answerId) {
-  questions.value[qIndex].answers.splice(answerId, 1);
+//delete answer from a question and remove from UI
+async function removeAnswerFromDialog(answerIndex, answer) {
+  newQuestion.value.answers.splice(answerIndex, 1);
+  if (answer.id) {
+    try {
+      await AnswerServices.deleteAnswer(answer.id);
+      snackbar.value = {
+        value: true,
+        color: "green",
+        text: `Answer ${answer.id} deleted successfully!`,
+      };
+    } catch (error) {
+      console.error(error);
+      snackbar.value.value = true;
+      snackbar.value.color = "error";
+      snackbar.value.text = error.response.data.message;
+    }
+  }
 }
 
-//delete question and its answers
+//delete a question and its answers
 async function deleteQuestionandAnswer(question) {
   await AnswerServices.deleteAnswerFromQuestion(question.id);
   await QuestionServices.deleteQuestionFromPoll(question.id)
@@ -143,39 +188,155 @@ async function deleteQuestionandAnswer(question) {
   await getQuestions();
 }
 
-function showSnackbar(text, color) {
-  snackbar.value = { value: true, color, text };
-}
-function addAnotherQuestion() {
-  //TODO: Implement logic to add another question
+//create a new question with answers. Includes validation checks
+async function createQuestionAndAnswer() {
+  try {
+    // Validation stuff
+    if (!newQuestion.value.questionType) {
+      snackbar.value = {
+        value: true,
+        color: "error",
+        text: "Question type required.",
+      };
+      return;
+    }
+    if (!newQuestion.value.text || !newQuestion.value.text.trim()) {
+      snackbar.value = {
+        value: true,
+        color: "error",
+        text: "Please enter a question.",
+      };
+      return;
+    }
+    const answers = newQuestion.value.answers;
+    if (answers.length === 0) {
+      snackbar.value = {
+        value: true,
+        color: "error",
+        text: "At least one answer is required.",
+      };
+      return;
+    }
+
+    const type = newQuestion.value.questionType;
+    if (type === "multiple_choice") {
+      const hasCorrect = answers.some((a) => a.isCorrectAnswer);
+      if (!hasCorrect) {
+        snackbar.value = {
+          value: true,
+          color: "error",
+          text: "At least one correct answer is required.",
+        };
+        return;
+      }
+    }
+
+    if (type === "true_false") {
+      const tfAnswer = answers.every(
+        (a) => a.text === "True" || a.text === "False"
+      );
+      const hasCorrect = answers.some((a) => a.isCorrectAnswer);
+      if (!tfAnswer || !hasCorrect) {
+        snackbar.value = {
+          value: true,
+          color: "error",
+          text: "Please mark answer as True/False and select as correct.",
+        };
+        return;
+      }
+    }
+    if (type === "short_answer") {
+      const answer = answers[0];
+
+      if (!answer || !answer.text?.trim() || !answer.isCorrectAnswer) {
+        snackbar.value = {
+          value: true,
+          color: "error",
+          text: "Enter an answer and mark it as correct.",
+        };
+        return;
+      }
+    }
+
+    const questionData = {
+      ...newQuestion.value,
+      pollId: pollId,
+      questionNumber: questions.value.length + 1,
+    };
+
+    const res = await QuestionServices.createQuestion(questionData);
+    //debug
+    console.log("data being sent", questionData);
+
+    const questionId = res.data.id;
+
+    for (let index = 0; index < answers.length; index++) {
+      const answer = answers[index];
+      const answerData = {
+        text: answer.text,
+        answerIndex: index,
+        isCorrectAnswer: answer.isCorrectAnswer,
+      };
+      await AnswerServices.createAnswer(questionId, answerData);
+
+      //debug
+      console.log("data being sent", answerData);
+    }
+    snackbar.value.value = true;
+    snackbar.value.color = "green";
+    snackbar.value.text = `Question ${questionId} and its answers created successfully!`;
+  } catch (error) {
+    console.error(error);
+    snackbar.value.value = true;
+    snackbar.value.color = "error";
+    snackbar.value.text = error.response.data.message;
+  }
+  await getQuestions();
+  await getAnswers();
+  addQuestionDialog.value = false;
 }
 
+//open the add question dialog and reset values
 function addQuestion() {
-  // Reset new question data in v-dialog
   newQuestion.value = {
-    name: "",
+    text: "",
     questionType: "",
     answers: [{ text: "", isCorrect: false }],
     number: questions.value.length + 1,
   };
   addQuestionDialog.value = true;
 }
+
+//close the add question dialog
 function closeAddQuestion() {
   addQuestionDialog.value = false;
 }
 
-//edit poll question and its answers
+//edit question and its answers
 function editQuestion(item) {
-  newQuestion.value.name = item.name;
-  newQuestion.value.number = item.number;
-  newQuestion.value.questionType = item.questionType;
-  newQuestion.value.answers = item.answers;
+  // Prepare answers array
+  let answers = (item.answers || []).map((answer) => ({
+    id: answer.id,
+    text: answer.text,
+    isCorrectAnswer: answer.isCorrectAnswer,
+  }));
+
+  newQuestion.value = {
+    id: item.id,
+    text: item.text,
+    questionType: item.questionType,
+    answers,
+    number: item.questionNumber,
+  };
   editQuestionDialog.value = true;
 }
 
+//close the edit question dialog
 function closeEditQuestion() {
   editQuestionDialog.value = false;
 }
+
+//close the snackbar
 function closeSnackBar() {
   snackbar.value.value = false;
 }
@@ -203,17 +364,25 @@ function closeSnackBar() {
         <v-btn
           v-if="user !== null"
           color="primary"
+          density="comfortable"
+          class="mr-5"
+          elevation="5"
+          @click="updateQuiz()"
+          >Update quiz</v-btn
+        >
+        <v-btn
+          v-if="user !== null"
+          color="primary"
           @click="addQuestion()"
-          density="compact"
+          density="comfortable"
           class="mr-5"
           >Add Question</v-btn
         >
-
         <v-btn
           v-if="user !== null"
           color="blue"
           @click=""
-          density="compact"
+          density="comfortable"
           elevation="4"
           >Add Question with AI</v-btn
         >
@@ -234,13 +403,24 @@ function closeSnackBar() {
               <th class="text-left">Answers</th>
               <th class="text-left">Is Correct</th>
               <th class="text-left">Actions</th>
+              <!-- <th class="text-left">Shuffle Answer</th> -->
             </tr>
           </thead>
           <tbody>
             <tr v-for="item in questions" :key="item.number">
               <td>{{ item.questionNumber }}</td>
               <td>{{ item.text }}</td>
-              <td>{{ item.questionType }}</td>
+              <td>
+                {{
+                  item.questionType === "multiple_choice"
+                    ? "Multiple Choice"
+                    : item.questionType === "true_false"
+                    ? "True/False"
+                    : item.questionType === "short_answer"
+                    ? "Short Answer"
+                    : item.questionType
+                }}
+              </td>
               <td>
                 <ul v-for="answer in item.answers" :key="answer.text">
                   {{
@@ -251,7 +431,7 @@ function closeSnackBar() {
               <td>
                 <ul v-for="answer in item.answers" :key="answer.text">
                   {{
-                    answer.isCorrect ? "Yes" : "No"
+                    answer.isCorrectAnswer ? "Yes" : "No"
                   }}
                 </ul>
               </td>
@@ -275,62 +455,70 @@ function closeSnackBar() {
         <div v-else>No data to display</div>
       </v-col>
 
-      <v-col cols="2">
-        <v-btn v-if="user !== null" color="primary" @click="updateQuiz()"
-          >Update quiz</v-btn
-        >
-      </v-col>
       <v-col cols="12">
         <v-dialog
           persistent
           :model-value="addQuestionDialog || editQuestionDialog"
-          max-width="800px"
+          max-width="1000px"
         >
           <v-card class="rounded-lg elevation-5">
-            <v-card-title class="headline mb-2">{{
-              addQuestionDialog
-                ? "Add Question"
-                : editQuestionDialog
-                ? "Edit Question"
-                : ""
-            }}</v-card-title>
+            <v-card-title class="headline mb-2">
+              {{
+                addQuestionDialog
+                  ? "Add Question"
+                  : editQuestionDialog
+                  ? "Edit Question"
+                  : ""
+              }}
+            </v-card-title>
 
             <v-card-text>
               <div>
                 <v-select
                   v-model="newQuestion.questionType"
-                  :items="['multiple_choice', 'true_false', 'short_answer']"
+                  :items="[
+                    { text: 'Multiple Choice', value: 'multiple_choice' },
+                    { text: 'True/False', value: 'true_false' },
+                    { text: 'Short Answer', value: 'short_answer' },
+                  ]"
+                  item-title="text"
+                  item-value="value"
                   label="Question Type"
                   class="mb-2"
                 ></v-select>
+
                 <v-text-field
-                  v-model="questions.name"
+                  v-model="newQuestion.text"
                   label="Question"
                 ></v-text-field>
+
+                <!-- Multiple Choice Answers -->
                 <div v-if="newQuestion.questionType === 'multiple_choice'">
-                  <v-label class="mb-2">Answers</v-label>
                   <div
                     v-for="(answer, answerIndex) in newQuestion.answers"
-                    :key="answerIndex"
+                    :key="answer.id || answerIndex"
                     class="d-flex align-center mb-3"
                   >
                     <v-text-field
-                      v-model="newQuestion.answers[answerIndex].text"
+                      v-model="answer.text"
                       class="mr-5"
                       hide-details
                       label="Answer"
                     ></v-text-field>
+
                     <v-checkbox
-                      v-model="answer.isCorrect"
+                      v-model="answer.isCorrectAnswer"
                       class="mr-5"
                       hide-details
                       label="Correct Answer"
                     ></v-checkbox>
+
                     <v-icon
-                      size="small"
+                      size="large"
                       icon="mdi-delete"
-                      @click="removeAnswer(newQuestion, answerIndex)"
+                      @click="removeAnswerFromDialog(answerIndex, answer)"
                       color="red"
+                      class="mr-4 ml-2"
                     ></v-icon>
                   </div>
                   <v-btn
@@ -338,53 +526,87 @@ function closeSnackBar() {
                     color="primary"
                     @click="addAnswer(newQuestion)"
                     class="ml-4"
-                    ><v-icon icon="mdi-plus" start></v-icon> Add Answer</v-btn
                   >
+                    <v-icon icon="mdi-plus" start></v-icon> Add Answer
+                  </v-btn>
                 </div>
+
+                <!-- True/False Answers -->
                 <div v-if="newQuestion.questionType === 'true_false'">
                   <v-label class="mb-2">Select Answer</v-label>
                   <div
-                    v-for="(answer, answerId) in newQuestion.answers"
-                    :key="answerId"
+                    v-for="(answer, answerIndex) in newQuestion.answers"
+                    :key="answer.id || answerIndex"
                     class="d-flex align-center mb-3"
                   >
-                    <v-radio-group
-                      v-model="newQuestion.answers[answerId].text"
-                      class="mr-5"
-                      hide-details
-                      inline
-                    >
-                      <v-radio label="True" value="True"></v-radio>
-                      <v-radio label="False" value="False"></v-radio>
-                    </v-radio-group>
+                    <v-col cols="2">
+                      <v-radio-group v-model="answer.text">
+                        <v-radio label="True" value="True"></v-radio>
+                        <v-radio
+                          label="False"
+                          value="False"
+                        ></v-radio> </v-radio-group
+                    ></v-col>
+
                     <v-checkbox
-                      v-model="answer.isCorrect"
-                      class="mr-5"
-                      hide-details
+                      v-model="answer.isCorrectAnswer"
                       label="Correct Answer"
                     ></v-checkbox>
                   </div>
                 </div>
+
+                <!-- Short Answer -->
+                <div v-if="newQuestion.questionType === 'short_answer'">
+                  <div
+                    v-for="(answer, answerIndex) in newQuestion.answers"
+                    :key="answer.id || answerIndex"
+                    class="d-flex align-center mb-3"
+                  >
+                    <v-text-field
+                      v-model="answer.text"
+                      label="Answer"
+                      class="mr-5"
+                      hide-details
+                    ></v-text-field>
+
+                    <v-checkbox
+                      v-model="answer.isCorrectAnswer"
+                      label="Correct Answer"
+                      hide-details
+                    ></v-checkbox>
+
+                    <v-icon
+                      size="large"
+                      icon="mdi-delete"
+                      @click="removeAnswerFromDialog(answerIndex, answer)"
+                      color="red"
+                      class="mr-4 ml-2"
+                    ></v-icon>
+                  </div>
+
+                  <v-btn
+                    v-if="newQuestion.questionType !== 'short_answer'"
+                    variant="text"
+                    color="primary"
+                    @click="addAnswer(newQuestion)"
+                    class="ml-4"
+                  >
+                    <v-icon icon="mdi-plus" start></v-icon> Add Answer
+                  </v-btn>
+                </div>
               </div>
             </v-card-text>
+
             <v-card-actions>
-              <!-- TODO: Implement logic to add another question -->
-              <v-if v-if="addQuestionDialog">
-                <v-btn
-                  variant="text"
-                  color="primary"
-                  @click="addAnotherQuestion()"
-                  class="ml-4"
-                  hidden
-                  ><v-icon icon="mdi-plus" start></v-icon> Add Another
-                  Question</v-btn
-                >
-              </v-if>
               <v-spacer />
               <v-btn
                 variant="flat"
                 color="primary"
-                @click="updateQuestionAndAnswer()"
+                @click="
+                  editQuestionDialog
+                    ? updateQuestionAndAnswer()
+                    : createQuestionAndAnswer()
+                "
               >
                 {{ editQuestionDialog ? "Update Question" : "Save" }}
               </v-btn>
@@ -397,8 +619,9 @@ function closeSnackBar() {
                     ? closeEditQuestion()
                     : false
                 "
-                >Close</v-btn
               >
+                Close
+              </v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>

@@ -1,20 +1,23 @@
 import apiClient from "./services";
 export default {
-  //get all answers for a question
+  //create an answer for a question with ID
+  createAnswer(questionId, answerData) {
+    return apiClient.post("questions/" + questionId + "/answers", answerData);
+  },
+  //retrieve all answers for a question ID
   getAnswersForQuestion(questionId) {
     return apiClient.get("questions/" + questionId + "/answers");
   },
-  //add answer to a question
-  addAnswerToQuestion() {
-    return apiClient.post("questions/" + questionId + "/answers");
-  },
-
-  //update answer in a question
-  updateAnswerInQuestion(questionId, data) {
+  //update answer and question
+  updateQuestionAndAnswer(questionId, data) {
     return apiClient.put("answers/" + questionId, data);
   },
-  //delete answer from a question
+  //delete answer for a question with ID
   deleteAnswerFromQuestion(questionId) {
     return apiClient.delete("questions/" + questionId + "/answers");
+  },
+  //delete an answer by ID
+  deleteAnswer(answerId) {
+    return apiClient.delete("answers/" + answerId);
   },
 };
