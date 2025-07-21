@@ -32,6 +32,12 @@ const router = createRouter({
       component: () => import("./views/admin/Settings.vue"),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
+    {
+      path: "/admin/ai-quiz-builder",
+      name: "admin-ai-quiz-builder",
+      component: () => import("./views/admin/AiQuizBuilder.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
     //  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
     //  ToDo:  Remove RECIPE references
     {

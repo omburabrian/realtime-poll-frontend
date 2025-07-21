@@ -44,10 +44,24 @@ function closeSnackBar() {
     <div id="body">
       
       <v-row align="center" class="mb-4">
-        <v-col cols="10"
-          ><v-card-title class="pl-0 text-h4 font-weight-bold"
-            >Admin Dashboard
+        <v-col cols="10">
+          <v-card-title class="pl-0 text-h4 font-weight-bold">
+            Admin Dashboard
           </v-card-title>
+        </v-col>
+      </v-row>
+      <v-row class="mb-4">
+        <v-col cols="12">
+          <router-link to="/admin/ai-quiz-builder">
+            <v-btn color="deep-red darken-2" dark class="mb-2" block>
+              AI Quiz Builder
+            </v-btn>
+          </router-link>
+          <router-link to="/admin/ai-quiz-builder">
+            <v-btn color="primary" dark block>
+              Create AI Quiz
+            </v-btn>
+          </router-link>
         </v-col>
       </v-row>
 
