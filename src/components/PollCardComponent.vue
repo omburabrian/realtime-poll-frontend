@@ -81,9 +81,6 @@ function navigateToEdit() {
         </v-col>
       </v-row>
     </v-card-title>
-    <v-card-text class="body-1">
-      {{ poll.description }}
-    </v-card-text>
     <v-expand-transition>
       <v-card-text class="pt-0" v-show="showDetails">
         <h3>Questions</h3>

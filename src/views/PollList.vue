@@ -14,7 +14,6 @@ const snackbar = ref({
 });
 const newPoll = ref({
   name: "",
-  description: "",
   schoolGroup: "",
   timePerQuestion: "30",
   isPublished: false,
@@ -125,11 +124,6 @@ function closeSnackBar() {
               label="Time per Question"
               type="number"
             ></v-text-field>
-
-            <v-textarea
-              v-model="newPoll.description"
-              label="Description"
-            ></v-textarea>
             <v-switch
               v-model="newPoll.isPublished"
               hide-details
