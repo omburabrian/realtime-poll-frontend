@@ -1,12 +1,15 @@
 import apiClient from "./services";
 
 export default {
+
   getUser() {
     return apiClient.get("users");
   },
+
   addUser(user) {
     return apiClient.post("users", user);
   },
+
   loginUser(user) {
     console.log(user);
     return apiClient.post("login", user.value, {
@@ -20,7 +23,25 @@ export default {
       },
     });
   },
+
   logoutUser() {
     return apiClient.post("logout");
   },
+  
+  getUsers() {
+    return apiClient.get("users");
+  },
+
+  getUserRoles() {
+    return apiClient.get("user-roles");
+  },
+
+  updateUser(id, data) {
+    return apiClient.put("users/" + id, data);
+  },
+
+  deleteUser(id) {
+    return apiClient.delete("users/" + id);
+  },
+
 };
