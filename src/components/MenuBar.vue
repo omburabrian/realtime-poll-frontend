@@ -60,6 +60,9 @@ function logout() {
       <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'ingredients' }">
         Ingredients
       </v-btn>
+       <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'polls' }">
+        Polls/Quizzes
+      </v-btn>
       <v-menu v-if="user !== null && user.role === 'admin'" location="bottom" rounded>
         <template v-slot:activator="{ props }">
           <v-btn class="mx-2" v-bind="props">

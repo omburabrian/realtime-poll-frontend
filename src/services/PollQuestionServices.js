@@ -1,13 +1,14 @@
 import apiClient from "./services";
 
 export default {
-  getPollQuestions() {
-    return apiClient.get("questions");
-  },
+
   getPollQuestionsForPoll(PollId) {
-    return apiClient.get("questions/poll/" + PollId );
+    return apiClient.get("polls/" + PollId + "/questions");
   },
  
+  getPollQuestionAnswers(pollQuestionId) {
+    return apiClient.get("questions/" + pollQuestionId + "/answers");
+  },
   addPollQuestion(pollQuestion) {
     return apiClient.post(
       "questions/",
@@ -27,7 +28,4 @@ export default {
     );
   },
 
-  getPollQuestionAnswers(questionId) {
-    return apiClient.get("answers/question/" + questionId);
-  },
 };

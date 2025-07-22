@@ -14,14 +14,15 @@ const snackbar = ref({
 });
 const newPoll = ref({
   name: "",
-  schoolGroup: "",
+  description: "",
   timePerQuestion: "30",
   isPublished: false,
 });
 
 onMounted(async () => {
-  await getPolls();
+ 
   user.value = JSON.parse(localStorage.getItem("user"));
+   await getPolls();
 });
 
 async function getPolls() {
@@ -102,7 +103,7 @@ function closeSnackBar() {
         v-for="poll in polls"
         :key="poll.id"
         :poll="poll"
-        @deletedList="getLists()"
+        @deletedList="getPolls()"
       />
 
       <v-dialog persistent v-model="isAdd" width="800">
@@ -116,7 +117,7 @@ function closeSnackBar() {
             ></v-text-field>
 
             <v-text-field
-              v-model="newPoll.schoolGroup"
+              v-model="newPoll.description"
               label="Class/Group"
             ></v-text-field>
             <v-text-field

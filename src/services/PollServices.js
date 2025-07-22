@@ -2,10 +2,10 @@ import apiClient from "./services";
 
 export default {
   getPolls() {
-    return apiClient.get("polls");
+    return apiClient.get("polls/");
   },
   getPollsByUserId(userId) {
-    return apiClient.get("polls/user/" + userId);
+    return apiClient.get("users/" + userId +"/polls/");
   },
   getPoll(id) {
     return apiClient.get("polls/" + id);

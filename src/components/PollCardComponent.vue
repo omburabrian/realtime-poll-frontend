@@ -9,6 +9,7 @@ const router = useRouter();
 const showDetails = ref(false);
 const pollQuestions = ref([]);
 const user = ref(null);
+const questionAnswers = ref({});
 
 const props = defineProps({
   poll: {
@@ -19,18 +20,23 @@ const props = defineProps({
 onMounted(async () => {
   await getPollQuestions();
   user.value = JSON.parse(localStorage.getItem("user"));
+
 });
 
 async function getPollQuestions() {
-  await PollQuestionServices.getPollQuestionsForPoll(props.poll.id)
-    .then((response) => {
-      pollQuestions.value = response.data;
-      console.log(pollQuestions.value);
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+  try {
+    const response = await PollQuestionServices.getPollQuestionsForPoll(props.poll.id);
+    pollQuestions.value = response.data;
+
+    for (const question of pollQuestions.value) {
+      const answersRes = await getAnswers(question.id);
+      questionAnswers.value[question.id] = answersRes || [];
+    }
+  } catch (error) {
+    console.log(error);
+  }
 }
+
 
 async function getAnswers(questionId) {
   return PollQuestionServices.getPollQuestionAnswers(questionId)
@@ -58,19 +64,19 @@ function navigateToEdit() {
           {{ poll.name }}
           <v-chip class="ma-2" color="primary" label>
             <v-icon start icon="mdi-account-circle-outline"></v-icon>
-            {{ poll.schoolGroup }} 
+            {{ poll.description }} 
           </v-chip>
           <v-chip class="ma-2" color="accent" label>
             <v-icon start icon="mdi-clock-outline"></v-icon>
-            {{ poll.timePerQuestion }} minutes per question
+            {{ poll.secondsPerQuestion }} seconds per question
           </v-chip>
         </v-col>
         <v-col class="d-flex justify-end">
           <v-icon
             v-if="user !== null"
             size="small"
-            icon="mdi-file-pdf-box"
-            @click.stop="PollReports.generatePollCSV(poll)"
+            icon="mdi-play"
+            @click="navigateToStart()"
           ></v-icon>
           <v-icon
             v-if="user !== null"
@@ -85,36 +91,37 @@ function navigateToEdit() {
       <v-card-text class="pt-0" v-show="showDetails">
         <h3>Questions</h3>
         <v-table>
-          <thead>
-            <tr>
-              <th class="text-left">Question</th>
-              <th class="text-left">Answers</th>
-              <th class="text-left">Correct Answer</th>
-            </tr>
-          </thead>
           <tbody>
-            <tr v-for="question in pollQuestions" :key="question.id">
-              <td>{{ question.questionNumber + ". " + question.text }}</td>
-              <td>
-                <v-chip
-                  v-for="answer in getAnswers(question.id)"
-                  console.log(answer)
-                  :key="answer.id"
-                  size="small"
-                  class="ma-1"
-                  color="secondary"
-                >
-                  {{ answer.text }}
-                </v-chip></td>
-              <td>{{ question.text }}</td>
-              <td>
-                <v-chip
-                  size="small"
-                  pill
-                  >{{ question.questionType }}</v-chip
-                >
-              </td>
-            </tr>
+            <div v-for="question in pollQuestions" :key="question.id" class="mb-6">
+              <v-card class="pa-4" outlined>
+                <h4 class="mb-2">
+                  {{ question.questionNumber }}. {{ question.text }}
+
+                   <v-chip class="ml-2" size="small" pill>
+                  Type: {{ question.questionType.replace("_"," ") }}
+                  </v-chip>
+                </h4>
+               
+                <div class="mb-2">
+                  <div v-for="answer in questionAnswers[question.id] || []" :key="answer.id">
+                     <v-chip
+                      class="ma-1"
+                      :color="answer.isCorrectAnswer ? 'green' : 'grey lighten-2'"
+                      :text-color="answer.isCorrectAnswer ? 'white' : 'black'"
+                      size="small"
+                      style="font-weight: 600"
+                      
+                    >
+                      <v-icon start v-if="answer.isCorrectAnswer" icon="mdi-check-circle-outline" />
+                      {{ answer.answerIndex }}. {{ answer.text }}
+                    </v-chip>
+                  </div>
+                </div>
+
+               
+              </v-card>
+            </div>
+
           </tbody>
         </v-table>
       </v-card-text>
