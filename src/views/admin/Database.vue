@@ -77,7 +77,7 @@ function closeSnackBar() {
               <v-spacer></v-spacer>
 
               <v-btn variant="flat" color="primary" class="mb-2" @click="loadTestData_pollsQuestionsAnswers()">
-                Load Polls (Quizes)
+                Load Polls (Quizzes)
               </v-btn>
 
             </v-card-text>
