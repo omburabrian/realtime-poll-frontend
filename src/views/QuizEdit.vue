@@ -360,49 +360,47 @@ function closeSnackBar() {
           ></v-textarea>
         </v-form>
       </v-col>
-      <v-col>
-        <v-btn
-          v-if="user !== null"
-          color="primary"
-          density="comfortable"
-          class="mr-5"
-          elevation="5"
-          @click="updateQuiz()"
-          >Update quiz</v-btn
-        >
-        <v-btn
-          v-if="user !== null"
-          color="primary"
-          @click="addQuestion()"
-          density="comfortable"
-          class="mr-5"
-          >Add Question</v-btn
-        >
-        <v-btn
-          v-if="user !== null"
-          color="blue"
-          @click=""
-          density="comfortable"
-          elevation="4"
-          >Add Question with AI</v-btn
-        >
-      </v-col>
-      <v-col cols="12" class="mb-4">
+
+      <v-row class="mb-5">
+        <v-col cols="12" class="d-flex justify-end">
+          <v-btn
+            v-if="user !== null"
+            color="primary"
+            class="mr-5"
+            variant="outlined"
+            elevation="3"
+            @click="updateQuiz()"
+            >Update quiz</v-btn
+          >
+          <v-btn
+            v-if="user !== null"
+            color="amber"
+            @click="addQuestion()"
+            class="mr-5"
+            ><v-icon icon="mdi-plus" start></v-icon>Add Question</v-btn
+          >
+          <v-btn v-if="user !== null" color="blue" @click="" class="mr-5"
+            ><v-icon icon="mdi-plus" start></v-icon>Add Question With AI</v-btn
+          >
+        </v-col>
+      </v-row>
+
+      <v-col cols="12" class="mb-5 mt-5">
         <v-table
           v-if="questions.length > 0"
-          class="rounded-lg elevation-5 mt-4 px-4 py-4"
-          height="auto"
+          class="elevation-10"
           fixed-header
           density="comfortable"
+          style="max-height: 70vh; overflow-y: auto"
         >
           <thead>
             <tr>
-              <th class="text-left">Number</th>
+              <th class="text-left">Question Number</th>
               <th class="text-left">Question</th>
-              <th class="text-left">Type</th>
-              <th class="text-left">Answers</th>
-              <th class="text-left">Is Correct</th>
-              <th class="text-left">Actions</th>
+              <th class="text-left">Question Type</th>
+              <th class="text-left" colspan="2">Answers</th>
+              <th class="text-left">Edit/Delete</th>
+              <!-- ToDO: Implement Shuffle Answer -->
               <!-- <th class="text-left">Shuffle Answer</th> -->
             </tr>
           </thead>
@@ -421,18 +419,38 @@ function closeSnackBar() {
                     : item.questionType
                 }}
               </td>
-              <td>
-                <ul v-for="answer in item.answers" :key="answer.text">
-                  {{
-                    answer.text
-                  }}
-                </ul>
-              </td>
-              <td>
-                <ul v-for="answer in item.answers" :key="answer.text">
-                  {{
-                    answer.isCorrectAnswer ? "Yes" : "No"
-                  }}
+              <td colspan="2">
+                <ol v-if="item.questionType === 'multiple_choice'" type="A">
+                  <li v-for="(answer, index) in item.answers" :key="index">
+                    {{ answer.text }} —
+                    <span
+                      :style="{
+                        color: answer.isCorrectAnswer ? 'green' : 'gray',
+                      }"
+                    >
+                      {{
+                        answer.isCorrectAnswer
+                          ? "Correct Answer"
+                          : "Incorrect Answer"
+                      }}
+                    </span>
+                  </li>
+                </ol>
+                <ul v-else>
+                  <li v-for="(answer, index) in item.answers" :key="index">
+                    {{ answer.text }} —
+                    <span
+                      :style="{
+                        color: answer.isCorrectAnswer ? 'green' : 'gray',
+                      }"
+                    >
+                      {{
+                        answer.isCorrectAnswer
+                          ? "Correct Answer"
+                          : "Incorrect Answer"
+                      }}
+                    </span>
+                  </li>
                 </ul>
               </td>
               <td>
@@ -452,9 +470,10 @@ function closeSnackBar() {
             </tr>
           </tbody>
         </v-table>
-        <div v-else>No data to display</div>
+        <div v-else>
+          <h3>No Questions In Poll. Please add Questions</h3>
+        </div>
       </v-col>
-
       <v-col cols="12">
         <v-dialog
           persistent
@@ -508,6 +527,7 @@ function closeSnackBar() {
 
                     <v-checkbox
                       v-model="answer.isCorrectAnswer"
+                      :color="answer.isCorrectAnswer ? 'green' : ''"
                       class="mr-5"
                       hide-details
                       label="Correct Answer"
@@ -539,19 +559,28 @@ function closeSnackBar() {
                     :key="answer.id || answerIndex"
                     class="d-flex align-center mb-3"
                   >
-                    <v-col cols="2">
-                      <v-radio-group v-model="answer.text">
+                    <v-col>
+                      <v-radio-group v-model="answer.text" inline>
                         <v-radio label="True" value="True"></v-radio>
                         <v-radio
                           label="False"
                           value="False"
                         ></v-radio> </v-radio-group
                     ></v-col>
-
-                    <v-checkbox
-                      v-model="answer.isCorrectAnswer"
-                      label="Correct Answer"
-                    ></v-checkbox>
+                    <div class="d-flex align-center" style="gap: 25px">
+                      <v-checkbox
+                        v-model="answer.isCorrectAnswer"
+                        :color="answer.isCorrectAnswer ? 'green' : 'gray'"
+                        label="Correct Answer"
+                        hide-details
+                      />
+                      <v-icon
+                        size="large"
+                        icon="mdi-delete"
+                        @click="removeAnswerFromDialog(answerIndex, answer)"
+                        color="red"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -571,6 +600,7 @@ function closeSnackBar() {
 
                     <v-checkbox
                       v-model="answer.isCorrectAnswer"
+                      :color="answer.isCorrectAnswer ? 'green' : 'gray'"
                       label="Correct Answer"
                       hide-details
                     ></v-checkbox>
@@ -638,3 +668,21 @@ function closeSnackBar() {
     </v-snackbar>
   </v-container>
 </template>
+<style scoped>
+.v-table table thead th {
+  background-color: rgb(114, 26, 54) !important;
+  color: white;
+  text-transform: uppercase;
+}
+
+.v-table table td {
+  padding: 16px !important;
+  vertical-align: top;
+  font-size: 16px;
+}
+
+.v-table ol li,
+.v-table ul li {
+  margin-bottom: 8px;
+}
+</style>
