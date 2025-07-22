@@ -7,7 +7,7 @@ import UserServices from "../../services/UserServices.js";
 
 const user = ref(null);   //  Current logged in user
 const users = ref([]);    //  List of users
-const roles = ref([]);    //  List of user roles
+const userRoles = ref([]);    //  List of user user roles
 
 const snackbar = ref({
   value: false,
@@ -18,7 +18,7 @@ const snackbar = ref({
 //----------------------------------------------------------------
 onMounted(async () => {
   await getUsers();
-  await getRoles();
+  await getUserRoles();
   user.value = JSON.parse(localStorage.getItem("user"));
   //  console.log(user.value);
 });
@@ -41,20 +41,20 @@ async function getUsers() {
 }
 
 //----------------------------------------------------------------
-//  Get user roles.
-async function getRoles() {
+//  Get user user roles.
+async function getUserRoles() {
 
   //  Object.getOwnPropertyNames()
   //  Object.keys()
   //  Object.values()
 
-  await UserServices.getRoles()
+  await UserServices.getUserRoles()
     .then((response) => {
       //  ROLES are defined as an array of constants.
-      //  Just send the *values*, not the ROLES object with its constant keys.
-      roles.value = Object.values(response.data);
-      //  roles.value = response.data;
-      console.log(roles.value);
+      //  Just send the *values*, not the ROLES *object* with its constant keys.
+      userRoles.value = Object.values(response.data);
+      //  NO:  userRoles.value = response.data;
+      //  console.log(userRoles.value);
     })
     .catch((error) => {
       console.log(error);
@@ -140,7 +140,7 @@ function closeSnackBar() {
         v-for="aUser in users"
         :key="aUser.id"
         :aUser="aUser"
-        :roles="roles"
+        :userRoles="userRoles"
         @update-role="handleUpdateRole"
         @delete-user="handleDeleteUser"
       />
