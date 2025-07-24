@@ -35,14 +35,14 @@ const router = createRouter({
     {
       path: "/quizEdit/:id",
       name: "quizEdit",
-      component: () => import("./views/QuizEdit.vue"),
+      component: () => import("./views/admin/QuizEdit.vue"),
     },
 
     //ToDo:  Remove this POLL reference. This is a test view.
     {
       path: "/poll",
       name: "poll",
-      component: () => import("./views/Poll.vue"),
+      component: () => import("./views/admin/Poll.vue"),
     },
     //  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
     //  ToDo:  Remove RECIPE references

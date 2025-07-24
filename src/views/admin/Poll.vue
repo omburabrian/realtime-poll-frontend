@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import PollServices from "../services/PollServices";
+import PollServices from "../../services/PollServices";
 
 const user = ref(null);
 const polls = ref([]);

@@ -1,9 +1,9 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import PollServices from "../services/PollServices";
-import QuestionServices from "../services/QuestionServices";
-import AnswerServices from "../services/AnswerServices";
+import PollServices from "../../services/PollServices";
+import QuestionServices from "../../services/QuestionServices";
+import AnswerServices from "../../services/AnswerServices";
 
 const route = useRoute();
 const pollId = route.params.id;
