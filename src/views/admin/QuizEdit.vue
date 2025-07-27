@@ -80,6 +80,22 @@ async function getAnswers() {
 
 //update the poll name and description
 async function updateQuiz() {
+  if (!poll.value.name || !poll.value.name.trim()) {
+    snackbar.value = {
+      value: true,
+      color: "error",
+      text: "Quiz name cannot be empty.",
+    };
+    return;
+  }
+  if (!poll.value.description || !poll.value.description.trim()) {
+    snackbar.value = {
+      value: true,
+      color: "error",
+      text: "Quiz description cannot be empty.",
+    };
+    return;
+  }
   try {
     await PollServices.updatePoll(poll.value.id, poll.value).then(() => {
       snackbar.value.value = true;
