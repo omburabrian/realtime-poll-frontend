@@ -396,46 +396,46 @@ async function dragToReorder() {
 <template>
   <v-container>
     <v-row>
-      <v-col>
+      <v-col cols="12">
         <v-card-title class="pl-0 text-h4 font-weight-bold"
           >Quiz Edit
         </v-card-title>
       </v-col>
 
-      <v-col cols="12">
-        <v-form>
-          <v-text-field label="Quiz Name" v-model="poll.name"></v-text-field>
-          <v-textarea
-            label="Description"
-            v-model="poll.description"
-            rows="3"
-          ></v-textarea>
-        </v-form>
+      <v-col cols="12" class="mb-3">
+        <v-card class="elevation-3">
+          <v-card-text>
+            <v-text-field label="Quiz Name" v-model="poll.name"></v-text-field>
+            <v-textarea
+              label="Description"
+              v-model="poll.description"
+              rows="3"
+            ></v-textarea>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn
+              class="ml-2 mb-2"
+              v-if="user !== null"
+              color="primary"
+              elevation="3"
+              @click="updateQuiz()"
+              >Update quiz</v-btn
+            >
+          </v-card-actions>
+        </v-card>
       </v-col>
-
-      <v-row class="mb-5">
-        <v-col cols="12" class="d-flex justify-end">
-          <v-btn
-            v-if="user !== null"
-            color="primary"
-            class="mr-5"
-            variant="outlined"
-            elevation="3"
-            @click="updateQuiz()"
-            >Update quiz</v-btn
-          >
-          <v-btn
-            v-if="user !== null"
-            color="amber"
-            @click="addQuestion()"
-            class="mr-5"
-            ><v-icon icon="mdi-plus" start></v-icon>Add Question</v-btn
-          >
-          <v-btn v-if="user !== null" color="blue" @click="" class="mr-5"
-            ><v-icon icon="mdi-plus" start></v-icon>Add Question With AI</v-btn
-          >
-        </v-col>
-      </v-row>
+      <v-col cols="12"
+        ><v-btn
+          v-if="user !== null"
+          color="amber"
+          @click="addQuestion()"
+          class="mr-5"
+          ><v-icon icon="mdi-plus" start></v-icon>Add Question</v-btn
+        >
+        <v-btn v-if="user !== null" color="blue" @click="" class="mr-5"
+          ><v-icon icon="mdi-plus" start></v-icon>Add Question With AI</v-btn
+        ></v-col
+      >
 
       <v-col cols="12" class="mb-5 mt-5">
         <v-table
