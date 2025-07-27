@@ -1,3 +1,4 @@
+import { da } from "vuetify/locale";
 import apiClient from "./services";
 export default {
   //retrieve all questions for a poll ID
@@ -14,6 +15,10 @@ export default {
   },
   //update Question and Answers with question ID
   updateQuestionAndAnswer(questionId, data) {
+    return apiClient.put("questions/" + questionId, data);
+  },
+  //update Question with question ID -- Reindexes questions
+  updateQuestion(questionId, data) {
     return apiClient.put("questions/" + questionId, data);
   },
 };

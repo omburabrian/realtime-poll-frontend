@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import draggable from "vuedraggable";
 import PollServices from "../../services/PollServices";
 import QuestionServices from "../../services/QuestionServices";
 import AnswerServices from "../../services/AnswerServices";
@@ -102,6 +103,7 @@ async function updateQuestionAndAnswer() {
       text: newQuestion.value.text,
       questionType: newQuestion.value.questionType,
       pollId: pollId,
+      questionNumber: newQuestion.value.number,
     };
 
     await QuestionServices.updateQuestionAndAnswer(
@@ -133,7 +135,7 @@ async function updateQuestionAndAnswer() {
     }
     snackbar.value.value = true;
     snackbar.value.color = "green";
-    snackbar.value.text = `Question ${newQuestion.value.id} updated successfully!`;
+    snackbar.value.text = `Question ${questionData.questionNumber} updated successfully!`;
   } catch (error) {
     console.log(error);
     snackbar.value.value = true;
@@ -147,7 +149,11 @@ async function updateQuestionAndAnswer() {
 
 //add an answer text-field to the question dialog
 function addAnswer(qIndex) {
-  qIndex.answers.push({ text: "", isCorrectAnswer: false });
+  qIndex.answers.push({
+    text: "",
+    isCorrectAnswer: false,
+    tempKey: Date.now() + Math.random(),
+  });
 }
 
 //delete answer from a question and remove from UI
@@ -170,14 +176,14 @@ async function removeAnswerFromDialog(answerIndex, answer) {
   }
 }
 
-//delete a question and its answers
+//delete a question and its answers and reindex question numbers
 async function deleteQuestionandAnswer(question) {
   await AnswerServices.deleteAnswerFromQuestion(question.id);
   await QuestionServices.deleteQuestionFromPoll(question.id)
     .then(() => {
       snackbar.value.value = true;
       snackbar.value.color = "green";
-      snackbar.value.text = `Question ${question.id} and its answers deleted successfully!`;
+      snackbar.value.text = `Question ${question.questionNumber} and answers deleted successfully!`;
     })
     .catch((error) => {
       console.log(error);
@@ -185,6 +191,21 @@ async function deleteQuestionandAnswer(question) {
       snackbar.value.color = "error";
       snackbar.value.text = error.response.data.message;
     });
+
+  await getQuestions();
+
+  // Reindex question numbers after deletion
+  for (let i = 0; i < questions.value.length; i++) {
+    const currentQuestion = questions.value[i];
+    const newNumber = i + 1;
+    if (currentQuestion.questionNumber !== newNumber) {
+      currentQuestion.questionNumber = newNumber;
+      await QuestionServices.updateQuestion(currentQuestion.id, {
+        questionNumber: newNumber,
+      });
+    }
+  }
+
   await getQuestions();
 }
 
@@ -208,6 +229,16 @@ async function createQuestionAndAnswer() {
       };
       return;
     }
+
+    // Ensure answers are not empty and at least one answer is set as correct
+    newQuestion.value.answers = newQuestion.value.answers
+      .filter((a) => a.text && a.text.trim() !== "")
+      .map((a, i) => ({
+        ...a,
+        text: a.text.trim(),
+        isCorrectAnswer: !!a.isCorrectAnswer,
+        answerIndex: i,
+      }));
     const answers = newQuestion.value.answers;
     if (answers.length === 0) {
       snackbar.value = {
@@ -219,16 +250,22 @@ async function createQuestionAndAnswer() {
     }
 
     const type = newQuestion.value.questionType;
+
     if (type === "multiple_choice") {
-      const hasCorrect = answers.some((a) => a.isCorrectAnswer);
-      if (!hasCorrect) {
+      const selectedAnswers = answers
+        .filter((a) => a.isCorrectAnswer)
+        .map((a) => a.text);
+
+      if (selectedAnswers.length === 0) {
         snackbar.value = {
           value: true,
           color: "error",
-          text: "At least one correct answer is required.",
+          text: "Please select at least one correct answer.",
         };
         return;
       }
+
+      console.log("Selected Answers:", selectedAnswers);
     }
 
     if (type === "true_false") {
@@ -284,7 +321,7 @@ async function createQuestionAndAnswer() {
     }
     snackbar.value.value = true;
     snackbar.value.color = "green";
-    snackbar.value.text = `Question ${questionId} and its answers created successfully!`;
+    snackbar.value.text = `Question ${questionData.questionNumber} and answers created successfully!`;
   } catch (error) {
     console.error(error);
     snackbar.value.value = true;
@@ -339,6 +376,21 @@ function closeEditQuestion() {
 //close the snackbar
 function closeSnackBar() {
   snackbar.value.value = false;
+}
+
+// Drag-and-drop handler for reordering questions
+async function dragToReorder() {
+  for (let i = 0; i < questions.value.length; i++) {
+    const question = questions.value[i];
+    const newNumber = i + 1;
+    if (question.questionNumber !== newNumber) {
+      question.questionNumber = newNumber;
+      await QuestionServices.updateQuestion(question.id, {
+        questionNumber: newNumber,
+      });
+    }
+  }
+  await getQuestions();
 }
 </script>
 <template>
@@ -395,6 +447,7 @@ function closeSnackBar() {
         >
           <thead>
             <tr>
+              <th class="text-left">Drag</th>
               <th class="text-left">Question Number</th>
               <th class="text-left">Question</th>
               <th class="text-left">Question Type</th>
@@ -404,71 +457,80 @@ function closeSnackBar() {
               <!-- <th class="text-left">Shuffle Answer</th> -->
             </tr>
           </thead>
-          <tbody>
-            <tr v-for="item in questions" :key="item.number">
-              <td>{{ item.questionNumber }}</td>
-              <td>{{ item.text }}</td>
-              <td>
-                {{
-                  item.questionType === "multiple_choice"
-                    ? "Multiple Choice"
-                    : item.questionType === "true_false"
-                    ? "True/False"
-                    : item.questionType === "short_answer"
-                    ? "Short Answer"
-                    : item.questionType
-                }}
-              </td>
-              <td colspan="2">
-                <ol v-if="item.questionType === 'multiple_choice'" type="A">
-                  <li v-for="(answer, index) in item.answers" :key="index">
-                    {{ answer.text }} —
-                    <span
-                      :style="{
-                        color: answer.isCorrectAnswer ? 'green' : 'gray',
-                      }"
-                    >
-                      {{
-                        answer.isCorrectAnswer
-                          ? "Correct Answer"
-                          : "Incorrect Answer"
-                      }}
-                    </span>
-                  </li>
-                </ol>
-                <ul v-else>
-                  <li v-for="(answer, index) in item.answers" :key="index">
-                    {{ answer.text }} —
-                    <span
-                      :style="{
-                        color: answer.isCorrectAnswer ? 'green' : 'gray',
-                      }"
-                    >
-                      {{
-                        answer.isCorrectAnswer
-                          ? "Correct Answer"
-                          : "Incorrect Answer"
-                      }}
-                    </span>
-                  </li>
-                </ul>
-              </td>
-              <td>
-                <v-icon
-                  size="small"
-                  icon="mdi-pencil"
-                  @click="editQuestion(item)"
-                  class="mr-4"
-                ></v-icon>
-                <v-icon
-                  size="small"
-                  icon="mdi-delete"
-                  @click="deleteQuestionandAnswer(item)"
-                  color="red"
-                ></v-icon>
-              </td>
-            </tr>
-          </tbody>
+          <draggable
+            v-model="questions"
+            tag="tbody"
+            handle=".drag-handle"
+            item-key="id"
+            @end="dragToReorder"
+          >
+            <template #item="{ element: item }">
+              <tr>
+                <td class="drag-handle" style="cursor: grab">&#9776;</td>
+                <td>{{ item.questionNumber }}</td>
+                <td>{{ item.text }}</td>
+                <td>
+                  {{
+                    item.questionType === "multiple_choice"
+                      ? "Multiple Choice"
+                      : item.questionType === "true_false"
+                      ? "True/False"
+                      : item.questionType === "short_answer"
+                      ? "Short Answer"
+                      : item.questionType
+                  }}
+                </td>
+                <td colspan="2">
+                  <ol v-if="item.questionType === 'multiple_choice'" type="A">
+                    <li v-for="(answer, index) in item.answers" :key="index">
+                      {{ answer.text }} —
+                      <span
+                        :style="{
+                          color: answer.isCorrectAnswer ? 'green' : 'gray',
+                        }"
+                      >
+                        {{
+                          answer.isCorrectAnswer
+                            ? "Correct Answer"
+                            : "Incorrect Answer"
+                        }}
+                      </span>
+                    </li>
+                  </ol>
+                  <ul v-else>
+                    <li v-for="(answer, index) in item.answers" :key="index">
+                      {{ answer.text }} —
+                      <span
+                        :style="{
+                          color: answer.isCorrectAnswer ? 'green' : 'gray',
+                        }"
+                      >
+                        {{
+                          answer.isCorrectAnswer
+                            ? "Correct Answer"
+                            : "Incorrect Answer"
+                        }}
+                      </span>
+                    </li>
+                  </ul>
+                </td>
+                <td>
+                  <v-icon
+                    size="small"
+                    icon="mdi-pencil"
+                    @click="editQuestion(item)"
+                    class="mr-4"
+                  ></v-icon>
+                  <v-icon
+                    size="small"
+                    icon="mdi-delete"
+                    @click="deleteQuestionandAnswer(item)"
+                    color="red"
+                  ></v-icon>
+                </td>
+              </tr>
+            </template>
+          </draggable>
         </v-table>
         <div v-else>
           <h3>No Questions In Poll. Please add Questions.</h3>
@@ -514,8 +576,8 @@ function closeSnackBar() {
                 <!-- Multiple Choice Answers -->
                 <div v-if="newQuestion.questionType === 'multiple_choice'">
                   <div
-                    v-for="(answer, answerIndex) in newQuestion.answers"
-                    :key="answer.id || answerIndex"
+                    v-for="(answer, index) in newQuestion.answers"
+                    :key="answer.tempKey || answer.id || index"
                     class="d-flex align-center mb-3"
                   >
                     <v-text-field
@@ -530,13 +592,14 @@ function closeSnackBar() {
                       :color="answer.isCorrectAnswer ? 'green' : ''"
                       class="mr-5"
                       hide-details
+                      :key="index"
                       label="Correct Answer"
                     ></v-checkbox>
 
                     <v-icon
                       size="large"
                       icon="mdi-delete"
-                      @click="removeAnswerFromDialog(answerIndex, answer)"
+                      @click="removeAnswerFromDialog(index, answer)"
                       color="red"
                       class="mr-4 ml-2"
                     ></v-icon>
@@ -556,7 +619,7 @@ function closeSnackBar() {
                   <v-label class="mb-2">Select Answer</v-label>
                   <div
                     v-for="(answer, answerIndex) in newQuestion.answers"
-                    :key="answer.id || answerIndex"
+                    :key="answer.tempKey || answer.id || answerIndex"
                     class="d-flex align-center mb-3"
                   >
                     <v-col>
@@ -588,7 +651,7 @@ function closeSnackBar() {
                 <div v-if="newQuestion.questionType === 'short_answer'">
                   <div
                     v-for="(answer, answerIndex) in newQuestion.answers"
-                    :key="answer.id || answerIndex"
+                    :key="answer.tempKey || answer.id || answerIndex"
                     class="d-flex align-center mb-3"
                   >
                     <v-text-field
