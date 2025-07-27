@@ -471,7 +471,7 @@ function closeSnackBar() {
           </tbody>
         </v-table>
         <div v-else>
-          <h3>No Questions In Poll. Please add Questions</h3>
+          <h3>No Questions In Poll. Please add Questions.</h3>
         </div>
       </v-col>
       <v-col cols="12">
