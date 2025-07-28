@@ -14,6 +14,7 @@ const snackbar = ref({
 const user = ref({
   firstName: "",
   lastName: "",
+  username: "",
   email: "",
   password: "",
 });
@@ -129,6 +130,12 @@ function closeSnackBar() {
             <v-text-field
               v-model="user.lastName"
               label="Last Name"
+              required
+            ></v-text-field>
+
+            <v-text-field
+              v-model="user.username"
+              label="Username"
               required
             ></v-text-field>
 
