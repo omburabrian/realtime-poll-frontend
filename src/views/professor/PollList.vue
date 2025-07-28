@@ -18,7 +18,7 @@ const snackbar = ref({
 onMounted(async () => {
     await getUserRoles();
     user.value = JSON.parse(localStorage.getItem("user"));
-    console.log(user.value);
+    //  console.log(user.value);
 });
 
 //----------------------------------------------------------------

@@ -39,13 +39,13 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresProfessor: true },
     },
     {
-      path: "/professor-polls",
+      path: "/professor/polls",
       name: "professor-polls",
       component: () => import("./views/professor/PollList.vue"),
       meta: { requiresAuth: true, requiresProfessor: true },
     },
     {
-      path: "/professor-preferences",
+      path: "/professor/preferences",
       name: "professor-preferences",
       component: () => import("./views/professor/Preferences.vue"),
       meta: { requiresAuth: true, requiresProfessor: true },

@@ -47,7 +47,6 @@ function logout() {
 //  ToDo:  Put this in a reusable utility service.
 //  Get user user roles.
 async function getUserRoles() {
-
     await UserServices.getUserRoles()
         .then((response) => {
             //  ROLES are defined as an array of constants.
@@ -57,9 +56,6 @@ async function getUserRoles() {
         })
         .catch((error) => {
             console.log(error);
-            snackbar.value.value = true;
-            snackbar.value.color = "error";
-            snackbar.value.text = error.response.data.message;
         });
 }
 

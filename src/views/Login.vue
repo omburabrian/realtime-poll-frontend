@@ -83,7 +83,7 @@ function closeSnackBar() {
         <v-card-text>
           <v-text-field
             v-model="user.email"
-            label="Email"
+            label="Email or Username"
             required
           ></v-text-field>
 
