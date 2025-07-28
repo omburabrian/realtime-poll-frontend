@@ -21,7 +21,7 @@ const newQuestion = ref({
   answers: [{ text: "", isCorrectAnswer: false }],
 });
 
-//load user data from localStorage, get poll details, questions, and answers on component mount
+//load user from localStorage, get poll details, questions, and answers on component mount
 onMounted(async () => {
   user.value = JSON.parse(localStorage.getItem("user"));
   await getPoll();
@@ -36,6 +36,19 @@ const snackbar = ref({
   text: "",
 });
 
+//show snackbar with message and color
+function showSnackbar(color, text) {
+  snackbar.value = {
+    value: true,
+    color: color,
+    text: text,
+  };
+}
+//close the snackbar
+function closeSnackBar() {
+  snackbar.value.value = false;
+}
+
 //get the poll details with the pollID
 async function getPoll() {
   await PollServices.getPoll(pollId)
@@ -44,9 +57,7 @@ async function getPoll() {
     })
     .catch((error) => {
       console.log(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = error.response.data.message;
+      showSnackbar("error", "Failed to fetch polls");
     });
 }
 
@@ -58,9 +69,7 @@ async function getQuestions() {
     })
     .catch((error) => {
       console.log(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = error.response.data.message;
+      showSnackbar("error", "Failed to fetch questions");
     });
 }
 
@@ -73,322 +82,29 @@ async function getAnswers() {
     }
   } catch (error) {
     console.error(error);
-    snackbar.value.value = true;
-    snackbar.value.color = "error";
-    snackbar.value.text = error.response.data.message;
+    showSnackbar("error", "Failed to fetch answers");
   }
 }
 
 //update the poll name and description
 async function updateQuiz() {
   if (!poll.value.name || !poll.value.name.trim()) {
-    snackbar.value = {
-      value: true,
-      color: "error",
-      text: "Quiz name cannot be empty.",
-    };
+    showSnackbar("error", "Quiz name cannot be empty.");
     return;
   }
   if (!poll.value.description || !poll.value.description.trim()) {
-    snackbar.value = {
-      value: true,
-      color: "error",
-      text: "Quiz description cannot be empty.",
-    };
+    showSnackbar("error", "Quiz description cannot be empty.");
     return;
   }
   try {
     await PollServices.updatePoll(poll.value.id, poll.value).then(() => {
-      snackbar.value.value = true;
-      snackbar.value.color = "green";
-      snackbar.value.text = `Poll ID ${poll.value.id} updated successfully!`;
+      showSnackbar("green", `Poll ID ${poll.value.id} updated successfully!`);
     });
   } catch (error) {
-    console.error(error);
     console.log(error);
-    snackbar.value.value = true;
-    snackbar.value.color = "error";
-    snackbar.value.text = error.response.data.message;
+    showSnackbar("error", "Failed to update poll");
   }
   await getPoll();
-}
-
-//update question and its answers after editing
-async function updateQuestionAndAnswer() {
-  //validation checks
-  const question = newQuestion.value;
-
-  if (!question.text || question.text.trim() === "") {
-    snackbar.value = {
-      value: true,
-      color: "error",
-      text: "Question cannot be empty.",
-    };
-    return;
-  }
-
-  if (!question.answers || question.answers.length === 0) {
-    snackbar.value = {
-      value: true,
-      color: "error",
-      text: "Please add at least one answer.",
-    };
-    return;
-  }
-
-  const hasValidAnswerText = question.answers.every(
-    (a) => a.text && a.text.trim() !== ""
-  );
-  if (!hasValidAnswerText) {
-    snackbar.value = {
-      value: true,
-      color: "error",
-      text: "Answer cannot be empty.",
-    };
-    return;
-  }
-
-  const hasCorrectAnswer = question.answers.some((a) => a.isCorrectAnswer);
-  if (!hasCorrectAnswer) {
-    snackbar.value = {
-      value: true,
-      color: "error",
-      text: "Please select at least one correct answer.",
-    };
-    return;
-  }
-  try {
-    const questionData = {
-      text: newQuestion.value.text,
-      questionType: newQuestion.value.questionType,
-      pollId: pollId,
-      questionNumber: newQuestion.value.number,
-    };
-
-    await QuestionServices.updateQuestionAndAnswer(
-      newQuestion.value.id,
-      questionData
-    );
-
-    for (const [index, answer] of newQuestion.value.answers.entries()) {
-      const answerData = {
-        text: answer.text,
-        isCorrectAnswer: answer.isCorrectAnswer,
-        answerIndex: index,
-        questionId: newQuestion.value.id,
-      };
-
-      //update an answer if it exists, otherwise create a new one
-      if (answer.id) {
-        await AnswerServices.updateQuestionAndAnswer(answer.id, {
-          id: answer.id,
-          ...answerData,
-        });
-
-        //debug
-        console.log("Answer updated:", answerData);
-      } else {
-        await AnswerServices.createAnswer(newQuestion.value.id, answerData);
-        console.log("Answer created:", answerData);
-      }
-    }
-    snackbar.value.value = true;
-    snackbar.value.color = "green";
-    snackbar.value.text = `Question ${questionData.questionNumber} updated successfully!`;
-  } catch (error) {
-    console.log(error);
-    snackbar.value.value = true;
-    snackbar.value.color = "error";
-    snackbar.value.text = error.response.data.message;
-  }
-  await getQuestions();
-  await getAnswers();
-  editQuestionDialog.value = false;
-}
-
-//add an answer text-field to the question dialog
-function addAnswer(qIndex) {
-  qIndex.answers.push({
-    text: "",
-    isCorrectAnswer: false,
-    tempKey: Date.now() + Math.random(),
-  });
-}
-
-//delete answer from a question and remove from UI
-async function removeAnswerFromDialog(answerIndex, answer) {
-  newQuestion.value.answers.splice(answerIndex, 1);
-  if (answer.id) {
-    try {
-      await AnswerServices.deleteAnswer(answer.id);
-      snackbar.value = {
-        value: true,
-        color: "green",
-        text: `Answer ${answer.id} deleted successfully!`,
-      };
-    } catch (error) {
-      console.error(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = error.response.data.message;
-    }
-  }
-}
-
-//delete a question and its answers and reindex question numbers
-async function deleteQuestionandAnswer(question) {
-  await AnswerServices.deleteAnswerFromQuestion(question.id);
-  await QuestionServices.deleteQuestionFromPoll(question.id)
-    .then(() => {
-      snackbar.value.value = true;
-      snackbar.value.color = "green";
-      snackbar.value.text = `Question ${question.questionNumber} and answers deleted successfully!`;
-    })
-    .catch((error) => {
-      console.log(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = error.response.data.message;
-    });
-
-  await getQuestions();
-
-  // Reindex question numbers after deletion
-  for (let i = 0; i < questions.value.length; i++) {
-    const currentQuestion = questions.value[i];
-    const newNumber = i + 1;
-    if (currentQuestion.questionNumber !== newNumber) {
-      currentQuestion.questionNumber = newNumber;
-      await QuestionServices.updateQuestion(currentQuestion.id, {
-        questionNumber: newNumber,
-      });
-    }
-  }
-
-  await getQuestions();
-}
-
-//create a new question with answers. Includes validation checks
-async function createQuestionAndAnswer() {
-  try {
-    // Validation stuff
-    if (!newQuestion.value.questionType) {
-      snackbar.value = {
-        value: true,
-        color: "error",
-        text: "Question type required.",
-      };
-      return;
-    }
-    if (!newQuestion.value.text || !newQuestion.value.text.trim()) {
-      snackbar.value = {
-        value: true,
-        color: "error",
-        text: "Please enter a question.",
-      };
-      return;
-    }
-
-    // Ensure answers are not empty and at least one answer is set as correct
-    newQuestion.value.answers = newQuestion.value.answers
-      .filter((a) => a.text && a.text.trim() !== "")
-      .map((a, i) => ({
-        ...a,
-        text: a.text.trim(),
-        isCorrectAnswer: !!a.isCorrectAnswer,
-        answerIndex: i,
-      }));
-    const answers = newQuestion.value.answers;
-    if (answers.length === 0) {
-      snackbar.value = {
-        value: true,
-        color: "error",
-        text: "At least one answer is required.",
-      };
-      return;
-    }
-
-    const type = newQuestion.value.questionType;
-
-    if (type === "multiple_choice") {
-      const selectedAnswers = answers
-        .filter((a) => a.isCorrectAnswer)
-        .map((a) => a.text);
-
-      if (selectedAnswers.length === 0) {
-        snackbar.value = {
-          value: true,
-          color: "error",
-          text: "Please select at least one correct answer.",
-        };
-        return;
-      }
-
-      console.log("Selected Answers:", selectedAnswers);
-    }
-
-    if (type === "true_false") {
-      const tfAnswer = answers.every(
-        (a) => a.text === "True" || a.text === "False"
-      );
-      const hasCorrect = answers.some((a) => a.isCorrectAnswer);
-      if (!tfAnswer || !hasCorrect) {
-        snackbar.value = {
-          value: true,
-          color: "error",
-          text: "Please mark answer as True/False and select as correct.",
-        };
-        return;
-      }
-    }
-    if (type === "short_answer") {
-      const answer = answers[0];
-
-      if (!answer || !answer.text?.trim() || !answer.isCorrectAnswer) {
-        snackbar.value = {
-          value: true,
-          color: "error",
-          text: "Enter an answer and mark it as correct.",
-        };
-        return;
-      }
-    }
-
-    const questionData = {
-      ...newQuestion.value,
-      pollId: pollId,
-      questionNumber: questions.value.length + 1,
-    };
-
-    const res = await QuestionServices.createQuestion(questionData);
-    //debug
-    console.log("data being sent", questionData);
-
-    const questionId = res.data.id;
-    for (let index = 0; index < answers.length; index++) {
-      const answer = answers[index];
-      const answerData = {
-        text: answer.text,
-        answerIndex: index,
-        isCorrectAnswer: answer.isCorrectAnswer,
-      };
-      await AnswerServices.createAnswer(questionId, answerData);
-
-      //debug
-      console.log("data being sent", answerData);
-    }
-    snackbar.value.value = true;
-    snackbar.value.color = "green";
-    snackbar.value.text = `Question ${questionData.questionNumber} and answers created successfully!`;
-  } catch (error) {
-    console.error(error);
-    snackbar.value.value = true;
-    snackbar.value.color = "error";
-    snackbar.value.text = error.response.data.message;
-  }
-  await getQuestions();
-  await getAnswers();
-  addQuestionDialog.value = false;
 }
 
 //open the add question dialog and reset values
@@ -400,6 +116,114 @@ function addQuestion() {
     number: questions.value.length + 1,
   };
   addQuestionDialog.value = true;
+}
+
+//validate new question and its answers before saving
+function validateNewQuestion() {
+  const question = newQuestion.value;
+  const type = question.questionType;
+
+  if (!type) {
+    showSnackbar("error", "Please select a question type.");
+    return false;
+  }
+
+  if (!question.text || !question.text.trim()) {
+    showSnackbar("error", "Please enter a question.");
+    return false;
+  }
+
+  question.answers = question.answers
+    .filter((a) => a.text && a.text.trim() !== "")
+    .map((a, i) => ({
+      ...a,
+      text: a.text.trim(),
+      isCorrectAnswer: !!a.isCorrectAnswer,
+      answerIndex: i,
+    }));
+
+  const answers = question.answers;
+
+  if (answers.length === 0) {
+    showSnackbar("error", "At least one answer is required.");
+    return false;
+  }
+
+  if (type === "multiple_choice") {
+    const correct = answers.filter((a) => a.isCorrectAnswer);
+    if (correct.length === 0) {
+      showSnackbar("error", "Please select at least one answer as correct.");
+      return false;
+    }
+  }
+
+  if (type === "true_false") {
+    const tfValid = answers.every(
+      (a) => a.text === "True" || a.text === "False"
+    );
+    const hasCorrect = answers.some((a) => a.isCorrectAnswer);
+    if (!tfValid || !hasCorrect) {
+      showSnackbar(
+        "error",
+        "Please select 'True' or 'False' and mark one as correct."
+      );
+      return false;
+    }
+  }
+
+  if (type === "short_answer") {
+    const a = answers[0];
+    if (!a || !a.text?.trim() || !a.isCorrectAnswer) {
+      showSnackbar(
+        "error",
+        "Please provide a valid answer and mark it as correct."
+      );
+      return false;
+    }
+  }
+
+  return true;
+}
+
+//save question and its answers
+async function saveQuestionAndAnswers() {
+  const questionData = {
+    ...newQuestion.value,
+    pollId: pollId,
+    questionNumber: questions.value.length + 1,
+  };
+
+  const res = await QuestionServices.createQuestion(questionData);
+  const questionId = res.data.id;
+
+  for (let index = 0; index < newQuestion.value.answers.length; index++) {
+    const answer = newQuestion.value.answers[index];
+    const answerData = {
+      text: answer.text,
+      answerIndex: index,
+      isCorrectAnswer: answer.isCorrectAnswer,
+    };
+    await AnswerServices.createAnswer(questionId, answerData);
+  }
+  showSnackbar(
+    "green",
+    `Question ${questionData.questionNumber} and answers created successfully!`
+  );
+}
+
+//create a new question and its answers
+async function createQuestionAndAnswer() {
+  try {
+    if (!validateNewQuestion()) return;
+    await saveQuestionAndAnswers();
+  } catch (error) {
+    console.error(error);
+    showSnackbar("error", "Failed to create question");
+  }
+
+  await getQuestions();
+  await getAnswers();
+  addQuestionDialog.value = false;
 }
 
 //close the add question dialog
@@ -426,9 +250,152 @@ function editQuestion(item) {
   editQuestionDialog.value = true;
 }
 
-//close the snackbar
-function closeSnackBar() {
-  snackbar.value.value = false;
+//validate question on edit
+function validateQuestionOnEdit(question) {
+  if (!question.text || question.text.trim() === "") {
+    showSnackbar("error", "Please enter a question.");
+    return false;
+  }
+
+  if (!question.answers || question.answers.length === 0) {
+    showSnackbar("error", "At least one answer is required.");
+    return false;
+  }
+
+  const selectedAnswer = question.answers.every(
+    (a) => a.text && a.text.trim() !== ""
+  );
+  if (!selectedAnswer) {
+    showSnackbar("error", "Select a value for answer.");
+    return false;
+  }
+
+  if (question.questionType === "true_false") {
+    const hasAnswer = question.answers.some(
+      (a) => a.isCorrectAnswer && (a.text === "True" || a.text === "False")
+    );
+    if (!hasAnswer) {
+      showSnackbar(
+        "error",
+        "Please select either True or False as the correct answer."
+      );
+      return false;
+    }
+  }
+
+  const isCorrect = question.answers.some((a) => a.isCorrectAnswer);
+  if (!isCorrect) {
+    showSnackbar("error", "At least one answer must be marked as correct.");
+    return false;
+  }
+  return true;
+}
+
+// save answers for a question on edit
+async function saveAnswers(question) {
+  for (const [index, answer] of question.answers.entries()) {
+    const answerData = {
+      text: answer.text,
+      isCorrectAnswer: answer.isCorrectAnswer,
+      answerIndex: index,
+      questionId: question.id,
+    };
+
+    if (answer.id) {
+      await AnswerServices.updateQuestionAndAnswer(answer.id, {
+        id: answer.id,
+        ...answerData,
+      });
+      console.log("Answer updated:", answerData);
+    } else {
+      await AnswerServices.createAnswer(question.id, answerData);
+      console.log("Answer created:", answerData);
+    }
+  }
+}
+
+//update question and its answers on v-dialog update
+async function updateQuestionAndAnswer() {
+  const question = newQuestion.value;
+
+  if (!validateQuestionOnEdit(question)) return;
+
+  try {
+    const questionData = {
+      text: question.text,
+      questionType: question.questionType,
+      pollId: pollId,
+      questionNumber: question.number,
+    };
+
+    await QuestionServices.updateQuestionAndAnswer(question.id, questionData);
+    await saveAnswers(question);
+
+    showSnackbar(
+      "green",
+      `Question ${questionData.questionNumber} updated successfully!`
+    );
+    editQuestionDialog.value = false;
+    await getQuestions();
+    await getAnswers();
+  } catch (error) {
+    console.error(error);
+    showSnackbar("error", "Failed to update question");
+  }
+}
+//add an answer text-field to the question dialog
+function addAnswer(qIndex) {
+  qIndex.answers.push({
+    text: "",
+    isCorrectAnswer: false,
+    tempKey: Date.now() + Math.random(),
+  });
+}
+
+//delete answer from a question and remove from UI
+async function removeAnswerFromDialog(answerIndex, answer) {
+  newQuestion.value.answers.splice(answerIndex, 1);
+  if (answer.id) {
+    try {
+      await AnswerServices.deleteAnswer(answer.id);
+      showSnackbar("green", `Answer ${answer.id} deleted successfully!`);
+    } catch (error) {
+      console.error(error);
+      showSnackbar("error", "Failed to delete answer");
+    }
+  }
+}
+
+//delete a question and its answers and reindex question numbers
+async function deleteQuestionandAnswer(question) {
+  await AnswerServices.deleteAnswerFromQuestion(question.id);
+  await QuestionServices.deleteQuestionFromPoll(question.id)
+    .then(() => {
+      showSnackbar(
+        "green",
+        `Question ${question.questionNumber} and answers deleted successfully!`
+      );
+    })
+    .catch((error) => {
+      console.log(error);
+      showSnackbar("error", "Failed to delete question");
+    });
+
+  await getQuestions();
+
+  // Reindex question numbers after deletion
+  for (let i = 0; i < questions.value.length; i++) {
+    const currentQuestion = questions.value[i];
+    const newNumber = i + 1;
+    if (currentQuestion.questionNumber !== newNumber) {
+      currentQuestion.questionNumber = newNumber;
+      await QuestionServices.updateQuestion(currentQuestion.id, {
+        questionNumber: newNumber,
+      });
+    }
+  }
+
+  await getQuestions();
 }
 
 // Drag-and-drop handler for reordering questions
@@ -690,7 +657,6 @@ async function dragToReorder() {
 
                 <!-- True/False Answers -->
                 <div v-if="newQuestion.questionType === 'true_false'">
-                  <v-label class="mb-2">Select Answer</v-label>
                   <div
                     v-for="(answer, answerIndex) in newQuestion.answers"
                     :key="answer.tempKey || answer.id || answerIndex"
@@ -719,6 +685,15 @@ async function dragToReorder() {
                       />
                     </div>
                   </div>
+                  <v-btn
+                    v-if="editQuestionDialog"
+                    variant="text"
+                    color="primary"
+                    @click="addAnswer(newQuestion)"
+                    class="ml-2"
+                  >
+                    <v-icon icon="mdi-plus" start></v-icon> Add Answer
+                  </v-btn>
                 </div>
 
                 <!-- Short Answer -->
