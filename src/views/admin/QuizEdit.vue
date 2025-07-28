@@ -13,6 +13,7 @@ const user = ref(null);
 const questions = ref([]);
 const addQuestionDialog = ref(false);
 const editQuestionDialog = ref(false);
+const showQuizInfo = ref(true);
 
 const newQuestion = ref({
   text: "",
@@ -114,6 +115,48 @@ async function updateQuiz() {
 
 //update question and its answers after editing
 async function updateQuestionAndAnswer() {
+  //validation checks
+  const question = newQuestion.value;
+
+  if (!question.text || question.text.trim() === "") {
+    snackbar.value = {
+      value: true,
+      color: "error",
+      text: "Question cannot be empty.",
+    };
+    return;
+  }
+
+  if (!question.answers || question.answers.length === 0) {
+    snackbar.value = {
+      value: true,
+      color: "error",
+      text: "Please add at least one answer.",
+    };
+    return;
+  }
+
+  const hasValidAnswerText = question.answers.every(
+    (a) => a.text && a.text.trim() !== ""
+  );
+  if (!hasValidAnswerText) {
+    snackbar.value = {
+      value: true,
+      color: "error",
+      text: "Answer cannot be empty.",
+    };
+    return;
+  }
+
+  const hasCorrectAnswer = question.answers.some((a) => a.isCorrectAnswer);
+  if (!hasCorrectAnswer) {
+    snackbar.value = {
+      value: true,
+      color: "error",
+      text: "Please select at least one correct answer.",
+    };
+    return;
+  }
   try {
     const questionData = {
       text: newQuestion.value.text,
@@ -322,7 +365,6 @@ async function createQuestionAndAnswer() {
     console.log("data being sent", questionData);
 
     const questionId = res.data.id;
-
     for (let index = 0; index < answers.length; index++) {
       const answer = answers[index];
       const answerData = {
@@ -384,11 +426,6 @@ function editQuestion(item) {
   editQuestionDialog.value = true;
 }
 
-//close the edit question dialog
-function closeEditQuestion() {
-  editQuestionDialog.value = false;
-}
-
 //close the snackbar
 function closeSnackBar() {
   snackbar.value.value = false;
@@ -415,10 +452,21 @@ async function dragToReorder() {
       <v-col cols="12">
         <v-card-title class="pl-0 text-h4 font-weight-bold"
           >Quiz Edit
+          <v-btn
+            variant="elevated"
+            icon
+            color="primary"
+            class="ml-2"
+            size="small"
+            @click="showQuizInfo = !showQuizInfo"
+          >
+            <v-icon>{{
+              showQuizInfo ? "mdi-chevron-up" : "mdi-chevron-down"
+            }}</v-icon>
+          </v-btn>
         </v-card-title>
       </v-col>
-
-      <v-col cols="12" class="mb-3">
+      <v-col cols="12" v-if="showQuizInfo">
         <v-card class="elevation-3">
           <v-card-text>
             <v-text-field label="Quiz Name" v-model="poll.name"></v-text-field>
@@ -428,49 +476,60 @@ async function dragToReorder() {
               rows="3"
             ></v-textarea>
           </v-card-text>
-          <v-card-actions>
+          <v-card-actions class="d-flex justify-space-between mb-2">
             <v-btn
-              class="ml-2 mb-2"
-              v-if="user !== null"
               color="primary"
-              elevation="3"
+              variant="elevated"
+              class="ml-2"
               @click="updateQuiz()"
               >Update quiz</v-btn
             >
+            <div>
+              <v-btn
+                color="orange"
+                variant="elevated"
+                class="mr-2"
+                @click="addQuestion()"
+                ><v-icon icon="mdi-plus" start></v-icon>Add Question</v-btn
+              >
+              <v-btn color="blue" variant="elevated" class="mr-2" @click=""
+                ><v-icon icon="mdi-plus" start></v-icon>Add Question With
+                AI</v-btn
+              >
+            </div>
           </v-card-actions>
         </v-card>
       </v-col>
-      <v-col cols="12"
-        ><v-btn
-          v-if="user !== null"
-          color="amber"
-          @click="addQuestion()"
-          class="mr-5"
-          ><v-icon icon="mdi-plus" start></v-icon>Add Question</v-btn
-        >
-        <v-btn v-if="user !== null" color="blue" @click="" class="mr-5"
-          ><v-icon icon="mdi-plus" start></v-icon>Add Question With AI</v-btn
-        ></v-col
-      >
+      <v-col cols="12">
+        <div v-if="questions.length === 0" class="text-center py-3">
+          <v-icon size="45" color="grey-lighten-1"
+            >mdi-comment-question-outline</v-icon
+          >
+          <h3 class="text-h6">No Questions Added Yet</h3>
+          <p class="text-body-1 mt-2">Click "Add Question" to get started</p>
+        </div>
+      </v-col>
 
-      <v-col cols="12" class="mb-5 mt-5">
+      <v-col cols="12">
         <v-table
           v-if="questions.length > 0"
           class="elevation-10"
           fixed-header
           density="comfortable"
-          style="max-height: 70vh; overflow-y: auto"
+          style="max-height: 100vh; overflow-y: auto"
         >
           <thead>
             <tr>
-              <th class="text-left">Drag</th>
-              <th class="text-left">Question Number</th>
-              <th class="text-left">Question</th>
+              <th class="text-center">Order</th>
+              <th class="text-left">
+                <span
+                  >{{ questions.length }}
+                  {{ questions.length === 1 ? "Question" : "Questions" }}</span
+                >
+              </th>
               <th class="text-left">Question Type</th>
               <th class="text-left" colspan="2">Answers</th>
               <th class="text-left">Edit/Delete</th>
-              <!-- ToDO: Implement Shuffle Answer -->
-              <!-- <th class="text-left">Shuffle Answer</th> -->
             </tr>
           </thead>
           <draggable
@@ -482,9 +541,16 @@ async function dragToReorder() {
           >
             <template #item="{ element: item }">
               <tr>
-                <td class="drag-handle" style="cursor: grab">&#9776;</td>
-                <td>{{ item.questionNumber }}</td>
-                <td>{{ item.text }}</td>
+                <td>
+                  <span class="drag-handle ml-10" style="cursor: grab"
+                    >&#9776;</span
+                  >
+                </td>
+                <td>
+                  <span class="text-subtitle-1 font-weight-bold"
+                    >Q{{ item.questionNumber }}: </span
+                  ><span class="text-body-1">{{ item.text }}</span>
+                </td>
                 <td>
                   {{
                     item.questionType === "multiple_choice"
@@ -497,37 +563,29 @@ async function dragToReorder() {
                   }}
                 </td>
                 <td colspan="2">
-                  <ol v-if="item.questionType === 'multiple_choice'" type="A">
-                    <li v-for="(answer, index) in item.answers" :key="index">
-                      {{ answer.text }} —
+                  <div v-if="item.questionType === 'multiple_choice'">
+                    <div v-for="(answer, index) in item.answers" :key="index">
+                      {{ String.fromCharCode(65 + index) }}. {{ answer.text }} —
                       <span
                         :style="{
                           color: answer.isCorrectAnswer ? 'green' : 'gray',
                         }"
                       >
-                        {{
-                          answer.isCorrectAnswer
-                            ? "Correct Answer"
-                            : "Incorrect Answer"
-                        }}
+                        {{ answer.isCorrectAnswer ? "Correct " : "Incorrect " }}
                       </span>
-                    </li>
-                  </ol>
+                    </div>
+                  </div>
                   <ul v-else>
-                    <li v-for="(answer, index) in item.answers" :key="index">
+                    <div v-for="(answer, index) in item.answers" :key="index">
                       {{ answer.text }} —
                       <span
                         :style="{
                           color: answer.isCorrectAnswer ? 'green' : 'gray',
                         }"
                       >
-                        {{
-                          answer.isCorrectAnswer
-                            ? "Correct Answer"
-                            : "Incorrect Answer"
-                        }}
+                        {{ answer.isCorrectAnswer ? "Correct " : "Incorrect " }}
                       </span>
-                    </li>
+                    </div>
                   </ul>
                 </td>
                 <td>
@@ -548,18 +606,15 @@ async function dragToReorder() {
             </template>
           </draggable>
         </v-table>
-        <div v-else>
-          <h3>No Questions In Poll. Please add Questions.</h3>
-        </div>
       </v-col>
       <v-col cols="12">
         <v-dialog
           persistent
           :model-value="addQuestionDialog || editQuestionDialog"
-          max-width="1000px"
+          max-width="800px"
         >
           <v-card class="rounded-lg elevation-5">
-            <v-card-title class="headline mb-2">
+            <v-card-title class="d-flex justify-space-between align-center">
               {{
                 addQuestionDialog
                   ? "Add Question"
@@ -567,6 +622,9 @@ async function dragToReorder() {
                   ? "Edit Question"
                   : ""
               }}
+              <v-btn v-if="addQuestionDialog" icon @click="closeAddQuestion">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
             </v-card-title>
 
             <v-card-text>
@@ -694,7 +752,6 @@ async function dragToReorder() {
                   </div>
 
                   <v-btn
-                    v-if="newQuestion.questionType !== 'short_answer'"
                     variant="text"
                     color="primary"
                     @click="addAnswer(newQuestion)"
@@ -711,6 +768,7 @@ async function dragToReorder() {
               <v-btn
                 variant="flat"
                 color="primary"
+                class="mr-3"
                 @click="
                   editQuestionDialog
                     ? updateQuestionAndAnswer()
@@ -718,18 +776,6 @@ async function dragToReorder() {
                 "
               >
                 {{ editQuestionDialog ? "Update Question" : "Save" }}
-              </v-btn>
-              <v-btn
-                color="primary"
-                @click="
-                  addQuestionDialog
-                    ? closeAddQuestion()
-                    : editQuestionDialog
-                    ? closeEditQuestion()
-                    : false
-                "
-              >
-                Close
               </v-btn>
             </v-card-actions>
           </v-card>
