@@ -7,16 +7,25 @@ import UserServices from "../services/UserServices";
 const router = useRouter();
 
 const user = ref(null);
+const userRoles = ref([]);    //  List of user user roles
 const title = ref("Real-time Poll");
 const logoURL = ref("");
+
 const adminMenuItems = ref([
-  { title: "Dashboard", name: "admin" },
+  { title: "Admin Dashboard", name: "admin" },
   { title: "Users", name: "admin-users" },
   { title: "Database", name: "admin-database" },
   { title: "Settings", name: "admin-settings" },
 ]);
 
-onMounted(() => {
+const professorMenuItems = ref([
+  { title: "Professor Dashboard", name: "professor" },
+  { title: "Professor Polls", name: "professor-polls" },
+  { title: "Professor Preferences", name: "professor-preferences" },
+]);
+
+onMounted(async () => {
+  await getUserRoles();
   logoURL.value = ocLogo;
   user.value = JSON.parse(localStorage.getItem("user"));
 });
@@ -33,6 +42,42 @@ function logout() {
   user.value = null;
   router.push({ name: "login" });
 }
+
+//----------------------------------------------------------------
+//  ToDo:  Put this in a reusable utility service.
+//  Get user user roles.
+async function getUserRoles() {
+
+    await UserServices.getUserRoles()
+        .then((response) => {
+            //  ROLES are defined as an array of constants.
+            userRoles.value = response.data;
+            //  console.log('userRoles.value.PROFESSOR');
+            //  console.log(userRoles.value.PROFESSOR);
+        })
+        .catch((error) => {
+            console.log(error);
+            snackbar.value.value = true;
+            snackbar.value.color = "error";
+            snackbar.value.text = error.response.data.message;
+        });
+}
+
+function isProfessorOrAdmin() {
+  return user.value &&
+    ( user.value.role === userRoles.value.PROFESSOR
+      || user.value.role === userRoles.value.ADMIN);
+}
+
+function isAdmin() {
+  return user.value && (user.value.role === userRoles.value.ADMIN);
+}
+
+function isProfessor() {
+  return user.value && (user.value.role === userRoles.value.PROFESSOR);
+}
+
+//-----------------------------------------------------------------------
 </script>
 
 <template>
@@ -60,7 +105,21 @@ function logout() {
       <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'ingredients' }">
         Ingredients
       </v-btn>
-      <v-menu v-if="user !== null && user.role === 'admin'" location="bottom" rounded>
+
+      <v-menu v-if="user !== null && isProfessorOrAdmin()" location="bottom" rounded>
+        <template v-slot:activator="{ props }">
+          <v-btn class="mx-2" v-bind="props">
+            Professor <v-icon end>mdi-menu-down</v-icon>
+          </v-btn>
+        </template>
+        <v-list>
+          <v-list-item v-for="(item, index) in professorMenuItems" :key="index" :to="{ name: item.name }">
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+
+      <v-menu v-if="user !== null && isAdmin()" location="bottom" rounded>
         <template v-slot:activator="{ props }">
           <v-btn class="mx-2" v-bind="props">
             Admin <v-icon end>mdi-menu-down</v-icon>
@@ -72,6 +131,7 @@ function logout() {
           </v-list-item>
         </v-list>
       </v-menu>
+
       <v-menu v-if="user !== null" min-width="200px" rounded>
         <template v-slot:activator="{ props }">
           <v-btn icon v-bind="props">

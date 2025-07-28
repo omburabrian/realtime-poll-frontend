@@ -32,6 +32,24 @@ const router = createRouter({
       component: () => import("./views/admin/Settings.vue"),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
+    {
+      path: "/professor",
+      name: "professor",
+      component: () => import("./views/professor/Professor.vue"),
+      meta: { requiresAuth: true, requiresProfessor: true },
+    },
+    {
+      path: "/professor-polls",
+      name: "professor-polls",
+      component: () => import("./views/professor/PollList.vue"),
+      meta: { requiresAuth: true, requiresProfessor: true },
+    },
+    {
+      path: "/professor-preferences",
+      name: "professor-preferences",
+      component: () => import("./views/professor/Preferences.vue"),
+      meta: { requiresAuth: true, requiresProfessor: true },
+    },
     //  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
     //  ToDo:  Remove RECIPE references
     {
@@ -70,7 +88,16 @@ router.beforeEach((to, from, next) => {
       //  Not an admin or not logged in, redirect to a safe page
       next({ name: "recipes" });
     }
-  } else if (to.meta.requiresAuth  &&  !user) {
+  }
+  else if (to.meta.requiresProfessor) {
+    if (user  &&  ((user.role === "professor") || (user.role === "admin"))) {
+      next();   //  User is a professor or admin -- Allow access
+    } else {
+      //  Not an admin or not logged in, redirect to a safe page
+      next({ name: "recipes" });
+    }
+  }
+  else if (to.meta.requiresAuth  &&  !user) {
     //  If route requires login and user is not logged in, redirect to login
     next({ name: "login" });
   } else {

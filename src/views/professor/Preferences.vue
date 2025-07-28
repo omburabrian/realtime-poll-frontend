@@ -3,6 +3,7 @@ import { onMounted } from "vue";
 import { ref } from "vue";
 
 const user = ref(null);
+
 const snackbar = ref({
   value: false,
   color: "",
@@ -10,9 +11,7 @@ const snackbar = ref({
 });
 
 onMounted(async () => {
-  //  await getRecipes();
   user.value = JSON.parse(localStorage.getItem("user"));
-  //  console.log(user.value);
 });
 
 function closeSnackBar() {
@@ -27,7 +26,7 @@ function closeSnackBar() {
       <v-row align="center" class="mb-4">
         <v-col cols="10"
           ><v-card-title class="pl-0 text-h4 font-weight-bold">
-            Admin Settings
+            Professor Preferences
           </v-card-title>
         </v-col>
       </v-row>
