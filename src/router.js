@@ -50,6 +50,12 @@ const router = createRouter({
       component: () => import("./views/professor/Preferences.vue"),
       meta: { requiresAuth: true, requiresProfessor: true },
     },
+    {
+      path: "/polls/history",
+      name: "polls-history",
+      component: () => import("./views/PollsHistory.vue"),
+      //  meta: { requiresAuth: true, },
+    },
     //  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
     //  ToDo:  Remove RECIPE references
     {
