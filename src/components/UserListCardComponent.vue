@@ -12,7 +12,7 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  roles: {
+  userRoles: {
     type: Array,
     required: true,
   },
@@ -64,7 +64,7 @@ function navigateToEdit() {
         <v-col cols="3" class="d-lg-2">
           <v-select
             v-model="aUser.role"
-            :items="roles"
+            :items="userRoles"
             label="Role"
             density="compact"
             hide-details
