@@ -74,6 +74,11 @@ function openAdd() {
   isAdd.value = true;
 }
 
+function openUpdate(poll) {
+  isAdd.value = true;
+  newPoll.value = { ...poll };
+}
+
 function closeAdd() {
   isAdd.value = false;
 }
@@ -121,8 +126,8 @@ function closeSnackBar() {
               label="Class/Group"
             ></v-text-field>
             <v-text-field
-              v-model.number="newPoll.timePerQuestion"
-              label="Time per Question"
+              v-model.number="newPoll.secondsPerQuestion"
+              label="seconds per Question"
               type="number"
             ></v-text-field>
             <v-switch

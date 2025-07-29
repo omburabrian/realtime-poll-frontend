@@ -62,10 +62,6 @@ function navigateToEdit() {
       <v-row align="center">
         <v-col cols="10">
           {{ poll.name }}
-          <v-chip class="ma-2" color="primary" label>
-            <v-icon start icon="mdi-account-circle-outline"></v-icon>
-            {{ poll.description }} 
-          </v-chip>
           <v-chip class="ma-2" color="accent" label>
             <v-icon start icon="mdi-clock-outline"></v-icon>
             {{ poll.secondsPerQuestion }} seconds per question
