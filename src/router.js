@@ -51,10 +51,23 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresProfessor: true },
     },
     {
+      //  ToDo:   Use this as the default landing page for all users?
+      //          Or at least student users?
       path: "/polls/history",
       name: "polls-history",
       component: () => import("./views/PollsHistory.vue"),
       //  meta: { requiresAuth: true, },
+    },
+    {
+      path: "/quiz-edit/:id",
+      name: "quizEdit",
+      component: () => import("./views/professor/QuizEdit.vue"),
+    },
+    //ToDo:  Remove this POLL reference. This is a test view.
+    {
+      path: "/poll",
+      name: "poll",
+      component: () => import("./views/professor/Poll.vue"),
     },
     //  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
     //  ToDo:  Remove RECIPE references
@@ -82,34 +95,30 @@ const router = createRouter({
 //  Add "Global Navigation Guard" to check authentication and/or
 //  authorization before displaying views.
 router.beforeEach((to, from, next) => {
-
   //  Get any currently logged in user
   const user = JSON.parse(localStorage.getItem("user"));
 
   //  Check if the route requires admin privileges
   if (to.meta.requiresAdmin) {
-    if (user  &&  (user.role === "admin")) {
+    if (user && user.role === "admin") {
       next(); //  User is an admin, allow access
     } else {
       //  Not an admin or not logged in, redirect to a safe page
       next({ name: "recipes" });
     }
-  }
-  else if (to.meta.requiresProfessor) {
+  } else if (to.meta.requiresProfessor) {
     if (user  &&  ((user.role === "professor") || (user.role === "admin"))) {
       next();   //  User is a professor or admin -- Allow access
     } else {
       //  Not an admin or not logged in, redirect to a safe page
       next({ name: "recipes" });
     }
-  }
-  else if (to.meta.requiresAuth  &&  !user) {
+  } else if (to.meta.requiresAuth  &&  !user) {
     //  If route requires login and user is not logged in, redirect to login
     next({ name: "login" });
   } else {
     next(); //  Otherwise, allow access
   }
-
 });
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

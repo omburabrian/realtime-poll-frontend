@@ -130,11 +130,19 @@ function isProfessor() {
           </v-btn>
         </template>
         <v-list>
-          <v-list-item v-for="(item, index) in adminMenuItems" :key="index" :to="{ name: item.name }">
+          <v-list-item
+            v-for="(item, index) in adminMenuItems"
+            :key="index"
+            :to="{ name: item.name }"
+          >
             <v-list-item-title>{{ item.title }}</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
+
+      <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'poll' }">
+        Poll Test
+      </v-btn>
 
       <v-menu v-if="user !== null" min-width="200px" rounded>
         <template v-slot:activator="{ props }">
