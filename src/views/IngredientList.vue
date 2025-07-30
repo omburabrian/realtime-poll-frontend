@@ -122,12 +122,26 @@ function closeSnackBar() {
   <v-container>
     <div id="body">
       <v-row align="center" class="mb-4">
-        <v-col cols="10">
-          <v-card-title class="pl-0 text-h4 font-weight-bold">Ingredients</v-card-title>
-          <QRCodeComponent url="https://www.britannica.com/quiz/whats-that-symbol-mean" />
+        <v-col cols="10"
+          ><v-card-title class="pl-0 text-h4 font-weight-bold"
+            >Ingredients
+          </v-card-title>
         </v-col>
         <v-col class="d-flex justify-end" cols="2">
-          <v-btn v-if="user !== null" color="accent" @click="openAdd()">Add</v-btn>
+          <v-btn v-if="user !== null" color="accent" @click="openAdd()"
+            >Add</v-btn
+          >
+        </v-col>
+      </v-row>
+
+      <!-- QR Code Test -->
+      <v-row class="mb-4">
+        <v-col cols="12" class="text-center">
+          <h3>Scan the QR Code</h3>
+          <QRCodeComponent 
+            url="https://www.figma.com/design/26pVsyYytkUpsJ1p75UvSO/Real-Time-Poll?node-id=66-28&p=f&t=06YdJXpcR5Sgeo9p-0" 
+            :showInput="true"
+          />
         </v-col>
       </v-row>
 
