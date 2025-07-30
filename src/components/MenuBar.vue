@@ -58,6 +58,9 @@ function logout() {
       <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'ingredients' }">
         Ingredients
       </v-btn>
+      <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'takeQuiz' }">
+        Take Quiz
+      </v-btn>
       <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'poll' }">
         Poll Test
       </v-btn>
