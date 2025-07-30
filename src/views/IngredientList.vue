@@ -2,6 +2,7 @@
 import { onMounted } from "vue";
 import { ref } from "vue";
 import IngredientServices from "../services/IngredientServices.js";
+import QRCodeComponent from '../components/QRCodeComponent.vue';
 
 const units = [
   "cup",
@@ -130,6 +131,17 @@ function closeSnackBar() {
           <v-btn v-if="user !== null" color="accent" @click="openAdd()"
             >Add</v-btn
           >
+        </v-col>
+      </v-row>
+
+      <!-- QR Code Test -->
+      <v-row class="mb-4">
+        <v-col cols="12" class="text-center">
+          <h3>Scan the QR Code</h3>
+          <QRCodeComponent 
+            url="https://www.figma.com/design/26pVsyYytkUpsJ1p75UvSO/Real-Time-Poll?node-id=66-28&p=f&t=06YdJXpcR5Sgeo9p-0" 
+            :showInput="true"
+          />
         </v-col>
       </v-row>
 
