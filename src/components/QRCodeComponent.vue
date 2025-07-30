@@ -1,11 +1,20 @@
 <template>
   <div class="qr-code-container">
-    <div v-if="qrCode">
-      <img :src="qrCode" alt="Quiz QR Code" style="width: 180px; height: 180px;" />
-      <p class="mt-2">Quiz Link: <a :href="quizLink" target="_blank">{{ quizLink }}</a></p>
+    <div v-if="showInput" class="text-center mb-6">
+      
+
+    <div v-if="qrCodeUrl" class="text-center">
+      <img :src="qrCodeUrl" :alt="`QR Code for ${currentUrl}`" class="qr-image" />
+      <p class="mt-3 text-center">
+        <a :href="currentUrl" target="_blank" class="text-primary text-body-2 text-decoration-none">
+          {{ currentUrl }}
+        </a>
+      </p>
+      </div>
     </div>
-    <div v-else>
+    <div v-else class="text-center">
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
+      <p class="mt-2">Generating QR Code...</p>
     </div>
   </div>
 </template>
@@ -14,42 +23,45 @@
 export default {
   name: "QRCodeComponent",
   props: {
-    quizId: {
-      type: [String, Number],
-      required: false
-    },
     url: {
       type: String,
-      required: false
+      required: true
+    },
+    size: {
+      type: Number,
+      default: 200
+    },
+    showInput: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
     return {
-      qrCode: null,
-      quizLink: ''
+      qrCodeUrl: null,
+      inputUrl: this.url,
+      currentUrl: this.url
     };
   },
-  async mounted() {
-    if (this.url) {
-      this.quizLink = this.url;
-      try {
-        const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(this.url)}&size=180x180`);
-        // Use the direct image URL for qrserver
-        this.qrCode = response.url;
-      } catch (error) {
-        this.qrCode = null;
-        alert('Failed to load QR code');
-      }
-    } else if (this.quizId) {
-      this.quizLink = `http://ec2-3-133-87-51.us-east-2.compute.amazonaws.com/realtime-poll-frontend/quiz/${this.quizId}`;
-      try {
-        const response = await fetch(`http://ec2-3-133-87-51.us-east-2.compute.amazonaws.com/api/quiz/${this.quizId}/qrcode`);
-        const data = await response.json();
-        this.qrCode = data.qrCode;
-      } catch (error) {
-        this.qrCode = null;
-        alert('Failed to load QR code');
-      }
+  mounted() {
+    this.generateQRCode();
+  },
+  methods: {
+    generateQRCode() {
+      // Using QR Server API to generate QR code
+      const qrServerUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(this.currentUrl)}&size=${this.size}x${this.size}`;
+      this.qrCodeUrl = qrServerUrl;
+    },
+    updateQRCode() {
+      this.currentUrl = this.inputUrl;
+      this.generateQRCode();
+    }
+  },
+  watch: {
+    url() {
+      this.inputUrl = this.url;
+      this.currentUrl = this.url;
+      this.generateQRCode();
     }
   }
 };
@@ -60,6 +72,14 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 16px;
+  padding: 16px;
 }
-</style> 
+
+.qr-image {
+  width: 200px;
+  height: 200px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+}
+</style>
