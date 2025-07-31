@@ -4,16 +4,12 @@ import { ref } from "vue";
 
 import UserCard from "../../components/UserListCardComponent.vue";
 import UserServices from "../../services/UserServices.js";
+import { useSnackbar } from "../../composables/useSnackbar.js";
 
 const user = ref(null);   //  Current logged in user
 const users = ref([]);    //  List of users
 const userRoles = ref([]);    //  List of user user roles
-
-const snackbar = ref({
-  value: false,
-  color: "",
-  text: "",
-});
+const { snackbar, showSnackbar, closeSnackBar } = useSnackbar();
 
 //----------------------------------------------------------------
 onMounted(async () => {
@@ -34,9 +30,7 @@ async function getUsers() {
     })
     .catch((error) => {
       console.log(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = error.response.data.message;
+      showSnackbar(error.response.data.message, 'error');
     });
 }
 
@@ -58,9 +52,7 @@ async function getUserRoles() {
     })
     .catch((error) => {
       console.log(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = error.response.data.message;
+      showSnackbar(error.response.data.message, 'error');
     });
 }
 
@@ -76,16 +68,12 @@ async function handleUpdateRole({ userId, role }) {
       if (userIndex !== -1) {
         users.value[userIndex].role = role;
       }
-      snackbar.value.value = true;
-      snackbar.value.color = "green";
-      snackbar.value.text = "User ROLE updated successfully";
+      showSnackbar("User ROLE updated successfully", "green");
     })
     .catch((error) => {
       console.log(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text =
-        error.response?.data?.message || "Error updating user ROLE";
+      const message = error.response?.data?.message || "Error updating user ROLE";
+      showSnackbar(message, "error");
 
       //  Optional: Re-fetch users to revert optimistic update on failure.
       //  (In case the user did not actually get updated in the DB.)
@@ -104,24 +92,15 @@ async function handleDeleteUser(userId) {
       .then(() => {
         //  Remove the user from the local list for instant UI feedback
         users.value = users.value.filter((u) => u.id !== userId);
-        snackbar.value.value = true;
-        snackbar.value.color = "green";
-        snackbar.value.text = "User deleted successfully";
+        showSnackbar("User deleted successfully", "green");
       })
       .catch((error) => {
         console.log(error);
-        snackbar.value.value = true;
-        snackbar.value.color = "error";
-        snackbar.value.text = error.response?.data?.message || "Error deleting user";
+        const message = error.response?.data?.message || "Error deleting user";
+        showSnackbar(message, "error");
       });
   }
 }
-
-//----------------------------------------------------------------
-function closeSnackBar() {
-  snackbar.value.value = false;
-}
-//----------------------------------------------------------------
 </script>
 
 <template>
