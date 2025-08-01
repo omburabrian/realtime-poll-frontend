@@ -1,3 +1,5 @@
+//  Use this in all views that use the "snackbar" to simplify the code.
+
 import { ref } from 'vue';
 
 export function useSnackbar() {
@@ -13,9 +15,14 @@ export function useSnackbar() {
     snackbar.value.value = true;
   }
 
-  function closeSnackBar() {
+  function showErrorSnackbar(error, defaultMessage = 'An unexpected error occurred.') {
+    const message = error?.response?.data?.message || error?.message || defaultMessage;
+    showSnackbar(message, "error");
+  }
+
+  function closeSnackbar() {
     snackbar.value.value = false;
   }
 
-  return { snackbar, showSnackbar, closeSnackBar };
+  return { snackbar, showSnackbar, showErrorSnackbar, closeSnackbar };
 }

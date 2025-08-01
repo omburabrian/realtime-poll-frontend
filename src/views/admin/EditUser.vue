@@ -60,7 +60,7 @@ function updateUser() {
                 ></v-text-field>
 
                 <v-text-field
-                  v-model="user.userName"
+                  v-model="user.username"
                   label="Username"
                   required
                 ></v-text-field>

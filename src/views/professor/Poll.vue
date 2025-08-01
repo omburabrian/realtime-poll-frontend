@@ -21,7 +21,7 @@ async function getPolls(userId) {
     })
     .catch((error) => {
       console.log(error);
-      showSnackbar(error.response.data.message, "error");
+      showErrorSnackbar(error, "Failed to load polls.");
     });
 }
 function navigateToEdit(pollId) {
