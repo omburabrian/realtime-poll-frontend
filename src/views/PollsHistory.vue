@@ -1,16 +1,22 @@
 <script setup>
 import { onMounted } from "vue";
 import { ref } from "vue";
-import { useSnackbar } from "../../composables/useSnackbar.js";
 
 const user = ref(null);
-const { snackbar, showSnackbar, closeSnackBar } = useSnackbar();
+
+const snackbar = ref({
+  value: false,
+  color: "",
+  text: "",
+});
 
 onMounted(async () => {
-  //  await getRecipes();
   user.value = JSON.parse(localStorage.getItem("user"));
-  //  console.log(user.value);
 });
+
+function closeSnackBar() {
+  snackbar.value.value = false;
+}
 </script>
 
 <template>
@@ -20,7 +26,7 @@ onMounted(async () => {
       <v-row align="center" class="mb-4">
         <v-col cols="10"
           ><v-card-title class="pl-0 text-h4 font-weight-bold">
-            Admin Settings
+            Polls History
           </v-card-title>
         </v-col>
       </v-row>
