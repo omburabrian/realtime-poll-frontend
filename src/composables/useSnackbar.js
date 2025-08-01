@@ -1,5 +1,5 @@
-//  ToDo:  Use this in all views that use the "snackbar" to simplify the code.
-// src/composables/useSnackbar.js
+//  Use this in all views that use the "snackbar" to simplify the code.
+
 import { ref } from 'vue';
 
 export function useSnackbar() {
@@ -15,8 +15,9 @@ export function useSnackbar() {
     snackbar.value.value = true;
   }
 
-  function showErrorSnackbar(message) {
-    showSnackbar(message, 'error');
+  function showErrorSnackbar(error, defaultMessage = 'An unexpected error occurred.') {
+    const message = error?.response?.data?.message || error?.message || defaultMessage;
+    showSnackbar(message, "error");
   }
 
   function closeSnackbar() {

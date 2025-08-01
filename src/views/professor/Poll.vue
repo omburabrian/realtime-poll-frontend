@@ -2,19 +2,16 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import PollServices from "../../services/PollServices";
+import { useSnackbar } from "../../composables/useSnackbar.js";
 
 const user = ref(null);
 const polls = ref([]);
 const router = useRouter();
+const { snackbar, showSnackbar, closeSnackBar } = useSnackbar();
 
 onMounted(async () => {
   user.value = JSON.parse(localStorage.getItem("user"));
   await getPolls(user.value.id);
-});
-const snackbar = ref({
-  value: false,
-  color: "",
-  text: "",
 });
 
 async function getPolls(userId) {
@@ -24,25 +21,15 @@ async function getPolls(userId) {
     })
     .catch((error) => {
       console.log(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = error.response.data.message;
+      showErrorSnackbar(error, "Failed to load polls.");
     });
 }
 function navigateToEdit(pollId) {
   if (!pollId) {
-    snackbar.value = {
-      value: true,
-      color: "error",
-      text: "Invalid poll ID",
-    };
+    showSnackbar("Invalid poll ID", "error");
     return;
   }
   router.push({ name: "quizEdit", params: { id: pollId } });
-}
-
-function closeSnackBar() {
-  snackbar.value.value = false;
 }
 </script>
 <template>
