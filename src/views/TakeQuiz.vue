@@ -1,76 +1,77 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import QuestionServices from "../services/QuestionServices";
-import AnswerServices from "../services/AnswerServices";
+import UserAnswerServices from "../services/UserAnswerServices";
+import QuizProgress from "../components/QuizTimerComponent.vue";
 
-const duration = 30;
-const remaining = ref(duration);
+// const duration = 30;
+// const remaining = ref(duration);
 const currentIndex = ref(0);
 const quizTitle = "American History";
 const questions = ref([]);
-const answers = ref([]);
+// const answers = ref([]);
 const userAnswers = ref([]); // Stores all user answers
-const pollId = 2;
-// UI state
-const selectedAnswerId = ref({});
-const answerText = ref("");
-const isFinished = ref(false);
+const pollId = 3;
+const pollEventUserId = ref(null);
+// // UI state
+// //const selectedAnswerId = ref({});
+const selectedAnswerText = ref("");
+// const isFinished = ref(false);
 
-// Computed properties
+// // Computed properties
 const currentQuestion = computed(() => questions.value[currentIndex.value]);
-const progress = computed(
-  () => ((duration - remaining.value) / duration) * 100
-);
-const timerColor = computed(() => (remaining.value <= 10 ? "red" : "green"));
+// const progress = computed(
+//   () => ((duration - remaining.value) / duration) * 100
+// );
+// const timerColor = computed(() => (remaining.value <= 10 ? "red" : "green"));
 
-const isAnswerSelected = computed(() => {
-  if (!currentQuestion.value) return false;
-  return currentQuestion.value.type === "short_answer"
-    ? answerText.value.trim() !== ""
-    : selectedAnswerId.value !== null;
-});
+// const isAnswerSelected = computed(() => {
+//   return selectedAnswerText.trim().length > 0;
+// });
 
-const isLastQuestion = computed(
-  () => currentIndex.value === questions.value.length - 1
-);
+// const isLastQuestion = computed(
+//   () => currentIndex.value === questions.value.length - 1
+// );
 
-let interval;
+// let interval;
 
-// Watch for question changes to load existing answers
-watch(currentQuestion, (newQuestion) => {
-  if (newQuestion) {
-    loadExistingAnswer();
-  }
-});
+// // Watch for question changes to load existing answers
+// watch(currentQuestion, (newQuestion) => {
+//   if (newQuestion) {
+//     loadExistingAnswer();
+//   }
+// });
 
-watch(currentQuestion, (q) => {
-  if (!q) return;
+// watch(currentQuestion, (q) => {
+//   if (!q) return;
 
-  const saved = userAnswers.value[q.id];
+//   const saved = userAnswers.value[q.id];
 
-  if (q.type === "short_answer") {
-    userAnswers.value = saved || "";
-  } else {
-    selectedAnswerId.value = saved || null;
-  }
-});
+//   if (q.type === "short_answer") {
+//     userAnswers.value = saved || "";
+//   }
+// } else {
+//   selectedAnswerId.value = saved || null;
+// }
+//});
 
-function loadExistingAnswer() {
-  const existingAnswer = userAnswers.value.find(
-    (a) => a.questionId === currentQuestion.value.id
-  );
+// function loadExistingAnswer() {
+//   const existingAnswer = userAnswers.value.find(
+//     (a) => a.questionId === currentQuestion.value.id
+//   );
 
-  if (existingAnswer) {
-    if (currentQuestion.value.type === "short_answer") {
-      answerText.value = existingAnswer.answer;
-    } else {
-      selectedAnswerId.value = existingAnswer.answer;
-    }
-  } else {
-    answerText.value = "";
-    selectedAnswerId.value = null;
-  }
-}
+//   if (existingAnswer) {
+//     if (currentQuestion.value.type === "short_answer") {
+//       selectedAnswerText.value = existingAnswer.answer;
+//     }
+//     // } else {
+//     //   selectedAnswerId.value = existingAnswer.answer;
+//     // }
+//   } else {
+//     selectedAnswerText.value = "";
+//     // selectedAnswerId.value = null;
+//   }
+// }
 
 // function startTimer() {
 //   remaining.value = duration;
@@ -89,16 +90,11 @@ function loadExistingAnswer() {
 
 //   try {
 //     const answerData = {
-//       questionId: currentQuestion.value.id,
-//       answer:
-//         currentQuestion.value.type === "short_answer"
-//           ? answerText.value
-//           : selectedAnswerId.value,
-//       pollEventUserUserId: 1, // Replace with actual user ID from auth
-//       questionType: currentQuestion.value.type,
+//       answer: selectedAnswerText.value,
+//       pollEventUserId: pollEventUserId,
 //     };
 
-//     // Update local answers store
+//     // Update  local answers store
 //     const existingIndex = userAnswers.value.findIndex(
 //       (a) => a.questionId === currentQuestion.value.id
 //     );
@@ -108,9 +104,17 @@ function loadExistingAnswer() {
 //     } else {
 //       userAnswers.value.push(answerData);
 //     }
-
+//     console.log("Submitting:", {
+//       questionId: currentQuestion.value.id,
+//       ...answerData,
+//     });
 //     // Submit to backend
-//     await AnswerServices.create(answerData);
+//     await UserAnswerServices.CreateUserAnswer(
+//       pollEventUserId,
+//       currentQuestion.value.id,
+//       answerData
+//       // Only send necessary data
+//     );
 
 //     // Move to next question or finish
 //     if (currentIndex.value + 1 < questions.value.length) {
@@ -119,38 +123,41 @@ function loadExistingAnswer() {
 //     } else {
 //       isFinished.value = true;
 //     }
+//     console.log(answerData);
 //   } catch (error) {
-//     console.error("Failed to submit answer:", error);
+//     console.error("Failed to submit answer:", error.response?.data || error);
 //     showSnackbar("error", "Failed to submit answer");
 //     startTimer(); // Restart timer if submission fails
 //   }
 // }
 
-function nextQuestion() {
-  if (currentIndex.value < questions.value.length - 1) {
-    clearInterval(interval);
-    currentIndex.value++;
-    //startTimer();
-  }
-}
+// function nextQuestion() {
+//   if (currentIndex.value < questions.value.length - 1) {
+//     clearInterval(interval);
+//     currentIndex.value++;
+//     //startTimer();
+//   }
+// }
 
-function prevQuestion() {
-  if (currentIndex.value > 0) {
-    clearInterval(interval);
-    currentIndex.value--;
-    // startTimer();
-  }
-}
+// function prevQuestion() {
+//   if (currentIndex.value > 0) {
+//     clearInterval(interval);
+//     currentIndex.value--;
+//     // startTimer();
+//   }
+// }
 
 // Lifecycle hooks
 onMounted(async () => {
-  await fetchQuestions();
-  //await fetchAnswers();
+  const user = JSON.parse(localStorage.getItem("user"));
+  pollEventUserId.value = user?.id;
+  await fetchAllQuestions();
+  // await fetchAnswersForQuestion();
   // await fetchExistingAnswers();
   //startTimer();
 });
 
-onBeforeUnmount(() => clearInterval(interval));
+//onBeforeUnmount(() => clearInterval(interval));
 
 // Snackbar functionality
 const snackbar = ref({
@@ -173,7 +180,7 @@ function closeSnackBar() {
 
 // fetch questions from backend
 
-async function fetchQuestions() {
+async function fetchAllQuestions() {
   try {
     const response = await QuestionServices.getQuestionsForPoll(pollId);
     questions.value = response.data.map((q) => ({
@@ -187,16 +194,42 @@ async function fetchQuestions() {
   }
 }
 
-// async function fetchExistingAnswers() {
-//   try {
-//     const response = await AnswerServices.getAnswersForQuestion(6);
-//     console.log("Fetched answers:", response.data); // Replace with actual user ID
-//     userAnswers.value = response.data;
-//     loadExistingAnswer(); // Load answer for first question
-//   } catch (error) {
-//     console.error("Failed to fetch existing answers:", error);
-//   }
-// }
+async function submitAnswers() {
+  try {
+    const data = {
+      answer: selectedAnswerText.value,
+      pollEventUserId: pollEventUserId.value,
+      questionId: currentQuestion.value.id,
+    };
+
+    console.log("Answer payload", data);
+
+    //check if existing answer in the db
+    const res = await UserAnswerServices.getUserAnswers(
+      pollEventUserId.value,
+      currentQuestion.value.id
+    );
+
+    //if answer exists update with new value otherwise create a new answer
+    const dbAnswers = res.data;
+
+    if (dbAnswers) {
+      await UserAnswerServices.UpdateUserAnswer(
+        pollEventUserId.value,
+        currentQuestion.value.id,
+        data
+      );
+    } else {
+      await UserAnswerServices.CreateUserAnswer(
+        pollEventUserId.value,
+        currentQuestion.value.id,
+        data
+      );
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
 </script>
 
 <template>
@@ -229,13 +262,13 @@ async function fetchQuestions() {
             <v-radio-group
               class="ml-6"
               v-if="currentQuestion.questionType === 'multiple_choice'"
-              v-model="selectedAnswerId"
+              v-model="selectedAnswerText"
             >
               <v-radio
                 v-for="answer in currentQuestion.answers"
                 :key="answer.id"
                 :label="answer.text"
-                :value="answer.id"
+                :value="answer.text"
               />
             </v-radio-group>
 
@@ -243,7 +276,7 @@ async function fetchQuestions() {
             <v-radio-group
               class="ml-6"
               v-else-if="currentQuestion.questionType === 'true_false'"
-              v-model="selectedAnswerId"
+              v-model="selectedAnswerText"
             >
               <v-radio label="True" :value="true" />
               <v-radio label="False" :value="false" />
@@ -253,7 +286,7 @@ async function fetchQuestions() {
             <v-textarea
               class="ml-8"
               v-else-if="currentQuestion.questionType === 'short_answer'"
-              v-model="selectedAnswerId"
+              v-model="selectedAnswerText"
               label="Enter Answer"
               rows="3"
             />
@@ -268,15 +301,11 @@ async function fetchQuestions() {
               Previous
             </v-btn>
 
-            <v-progress-circular
-              class=""
-              :model-value="progress"
-              :size="100"
-              :width="15"
-              :color="timerColor"
-            >
-              {{ remaining }}s
-            </v-progress-circular>
+            <QuizProgress
+              :progress="progress"
+              :remaining="remaining"
+              :timerColor="timerColor"
+            />
 
             <v-btn
               @click="nextQuestion"
@@ -285,6 +314,7 @@ async function fetchQuestions() {
             >
               {{ isLastQuestion ? "Finish" : "Next" }}
             </v-btn>
+            <v-btn @click="submitAnswers">Send</v-btn>
           </v-card-actions>
         </v-card>
 
