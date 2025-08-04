@@ -1,12 +1,13 @@
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import draggable from "vuedraggable";
 import PollServices from "../../services/PollServices";
 import QuestionServices from "../../services/QuestionServices";
 import AnswerServices from "../../services/AnswerServices";
 
 const route = useRoute();
+const router = useRouter();
 const pollId = route.params.id;
 const poll = ref({});
 const user = ref(null);
@@ -27,6 +28,9 @@ onMounted(async () => {
   await getPoll();
   await getQuestions();
   await getAnswers();
+  
+  // Check if there are generated questions to add
+  checkForGeneratedQuestions();
 });
 
 //snackbar logic
@@ -412,6 +416,66 @@ async function dragToReorder() {
   }
   await getQuestions();
 }
+
+// Navigate to AI Quiz Builder
+function goToAiQuizBuilder() {
+  router.push({ name: "admin-ai-quiz-builder" });
+}
+
+// Check for generated questions and add them to the quiz
+async function checkForGeneratedQuestions() {
+  const generatedQuestionsData = localStorage.getItem('generatedQuestions');
+  
+  if (generatedQuestionsData) {
+    try {
+      const generatedQuestions = JSON.parse(generatedQuestionsData);
+      
+      if (generatedQuestions && generatedQuestions.length > 0) {
+        // Add each generated question to the quiz
+        for (let i = 0; i < generatedQuestions.length; i++) {
+          const questionData = generatedQuestions[i];
+          const nextQuestionNumber = questions.value.length + i + 1;
+          
+          // Create the question
+          const questionPayload = {
+            text: questionData.text,
+            questionType: "multiple_choice",
+            pollId: pollId,
+            questionNumber: nextQuestionNumber,
+          };
+          
+          const questionResponse = await QuestionServices.createQuestion(questionPayload);
+          const questionId = questionResponse.data.id;
+          
+          // Create the answers
+          const answers = [
+            { text: questionData.optionA, isCorrectAnswer: questionData.correctOption === 'A', answerIndex: 0 },
+            { text: questionData.optionB, isCorrectAnswer: questionData.correctOption === 'B', answerIndex: 1 },
+            { text: questionData.optionC, isCorrectAnswer: questionData.correctOption === 'C', answerIndex: 2 },
+            { text: questionData.optionD, isCorrectAnswer: questionData.correctOption === 'D', answerIndex: 3 }
+          ];
+          
+          for (const answer of answers) {
+            await AnswerServices.createAnswer(questionId, answer);
+          }
+        }
+        
+        // Clear the generated questions from localStorage
+        localStorage.removeItem('generatedQuestions');
+        
+        // Refresh the questions list
+        await getQuestions();
+        await getAnswers();
+        
+        showSnackbar("green", `${generatedQuestions.length} AI-generated questions added to quiz successfully!`);
+      }
+    } catch (error) {
+      console.error('Error adding generated questions:', error);
+      showSnackbar("error", "Failed to add generated questions to quiz");
+      localStorage.removeItem('generatedQuestions');
+    }
+  }
+}
 </script>
 <template>
   <v-container>
@@ -459,7 +523,7 @@ async function dragToReorder() {
                 @click="addQuestion()"
                 ><v-icon icon="mdi-plus" start></v-icon>Add Question</v-btn
               >
-              <v-btn color="blue" variant="elevated" class="mr-2" @click=""
+              <v-btn color="blue" variant="elevated" class="mr-2" @click="goToAiQuizBuilder"
                 ><v-icon icon="mdi-plus" start></v-icon>Add Question With
                 AI</v-btn
               >

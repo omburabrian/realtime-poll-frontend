@@ -56,6 +56,22 @@ function closeSnackBar() {
         </v-col>
       </v-row>
 
+      <v-row align="center" class="mb-4">
+        <v-col cols="10">
+          <v-card class="elevation-3 pa-4">
+            <v-card-title class="text-h5 mb-4">Quick Actions</v-card-title>
+            <div class="d-flex flex-wrap gap-4">
+              <router-link to="/admin/ai-quiz-builder" style="text-decoration: none;">
+                <v-btn color="primary" variant="elevated" size="large">
+                  <v-icon icon="mdi-robot" start></v-icon>
+                  Create AI Quiz
+                </v-btn>
+              </router-link>
+            </div>
+          </v-card>
+        </v-col>
+      </v-row>
+
       <v-snackbar v-model="snackbar.value" rounded="pill">
         {{ snackbar.text }}
 
