@@ -14,4 +14,8 @@ export default {
     return apiClient.post("/admin/load-test-data/polls");
   },
 
+    loadTestData_courses() {
+    return apiClient.post("/admin/load-test-data/courses");
+  },
+
 };

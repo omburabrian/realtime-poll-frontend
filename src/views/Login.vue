@@ -48,21 +48,24 @@ async function createAccount() {
     })
     .catch((error) => {
       console.log(error);
-      showErrorSnackbar(error.response.data.message);
+      showErrorSnackbar(error);
     });
 }
 
 async function login() {
-  await UserServices.loginUser(loginCredentials.value)
-    .then((data) => {
-      window.localStorage.setItem("user", JSON.stringify(data.data));
-      showSnackbar("Login successful!", "green");
-      router.push({ name: "polls-history" });
-    })
-    .catch((error) => {
-      console.log(error);
-      showErrorSnackbar(error.response.data.message);
-    });
+
+  //  The error message from the backend was not displaying.
+  //  Whatever was received was "unexpected".
+  //  Wrap in try-catch block and give options for the returned response structure / message.
+  try {
+    const response = await UserServices.loginUser(loginCredentials.value);
+    window.localStorage.setItem("user", JSON.stringify(response.data));
+    showSnackbar("Login successful!", "green");
+    router.push({ name: "polls-history" });
+  } catch (error) {
+    //  console.error("Login failed:", error);
+    showErrorSnackbar(error);   //  Let the snackbar handle drilling down to the error message.
+  }
 }
 
 function openCreateAccount() {
@@ -183,7 +186,7 @@ function closeCreateAccount() {
         </v-card>
       </v-dialog>
 
-      <v-snackbar v-model="snackbar.value" rounded="pill">
+      <v-snackbar v-model="snackbar.value" rounded="pill" :timeout="snackbar.timeout">
         {{ snackbar.text }}
 
         <template v-slot:actions>
@@ -192,6 +195,7 @@ function closeCreateAccount() {
           </v-btn>
         </template>
       </v-snackbar>
+
     </div>
   </v-container>
 </template>
