@@ -43,6 +43,13 @@ const router = createRouter({
       name: "quizEdit",
       component: () => import("./views/admin/QuizEdit.vue"),
     },
+    {
+      path: "/admin/ai-quiz-builder",
+      name: "admin-ai-quiz-builder",
+      component: () => import("./views/admin/AiQuizBuilder.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+
     //ToDo:  Remove this POLL reference. This is a test view.
     {
       path: "/poll",
