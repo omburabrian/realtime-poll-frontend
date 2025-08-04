@@ -1,557 +1,458 @@
 <template>
-  <div class="ai-quiz-builder">
-    <div class="sidebar">
-      <h3>Saved Quizzes</h3>
-      <div v-if="loadingQuizzes" class="sidebar-loading">Loading...</div>
-      <div v-else-if="quizzes.length === 0" class="sidebar-empty">No quizzes yet.</div>
-      <ul class="quiz-list">
-        <li v-for="q in quizzes" :key="q.id" :class="{selected: selectedQuiz && selectedQuiz.id === q.id}" @click="selectQuiz(q)">
-          {{ q.name }}
-        </li>
-      </ul>
-    </div>
-    <div class="main-content">
-      <button class="btn new-quiz" @click="resetForm" style="margin-bottom: 1rem; align-self: flex-end;">New Quiz</button>
-      <h2>AI Quiz Builder</h2>
-      <form class="quiz-form" @submit.prevent>
-        <div class="form-group">
-          <label>Quiz Name</label>
-          <input v-model="quiz.name" placeholder="Quiz Name" />
-        </div>
-        <div class="form-group required">
-          <label>Quiz Topic</label>
-          <input v-model="quiz.topic" required />
-        </div>
-        <div class="form-group required">
-          <label>Number of Questions</label>
-          <input type="number" v-model.number="quiz.numQuestions" min="1" required />
-        </div>
-        <div class="form-group required">
-          <label>Grade Level</label>
-          <input v-model="quiz.gradeLevel" required />
-        </div>
-        <div class="form-group required">
-          <label>Question Type</label>
-          <select v-model="quiz.questionType" required>
-            <option value="multiple-choice">Multiple Choice</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Extra Instructions</label>
-          <textarea v-model="quiz.instructions" placeholder="Optional"></textarea>
-        </div>
-        <div class="button-row">
-          <button type="button" class="btn ai" @click="generateQuestions" :disabled="loading">
-            <span v-if="loading">Generating...</span>
-            <span v-else>Add Questions With AI</span>
-          </button>
-          <button type="button" class="btn" @click="addManualQuestion">Add Question</button>
-          <button type="button" class="btn save" @click="saveQuiz" :disabled="saving">
-            <span v-if="saving">Saving...</span>
-            <span v-else>Save Quiz</span>
-          </button>
-        </div>
-      </form>
-      <div class="questions-list">
-        <h3>Questions</h3>
-        <div v-if="questions.length === 0" class="empty">No questions yet.</div>
-        <div v-else class="scroll-area">
-          <div v-for="(q, idx) in questions" :key="q.id || idx" class="question-card">
-            <div class="q-header">
-              <span>Q{{ idx + 1 }}</span>
-              <button v-if="editingQuizId" class="delete-btn" @click="deleteQuestion(idx)">Delete</button>
-            </div>
-            <input v-model="q.text" placeholder="Question text" />
-            <div class="options">
-              <input v-model="q.optionA" placeholder="Option A" />
-              <input v-model="q.optionB" placeholder="Option B" />
-              <input v-model="q.optionC" placeholder="Option C" />
-              <input v-model="q.optionD" placeholder="Option D" />
-            </div>
-            <div class="correct-opt">
-              <label>Correct Option:</label>
-              <select v-model="q.correctOption">
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="D">D</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div v-if="selectedQuiz" class="quiz-detail-panel">
-        <h3>Quiz Details</h3>
-        <div><strong>Name:</strong> {{ selectedQuiz.name }}</div>
-        <div><strong>Topic:</strong> {{ selectedQuiz.topic }}</div>
-        <div><strong>Grade Level:</strong> {{ selectedQuiz.gradeLevel }}</div>
-        <div><strong>Type:</strong> {{ selectedQuiz.questionType }}</div>
-        <div><strong>Instructions:</strong> {{ selectedQuiz.instructions }}</div>
-        <div><strong>Questions:</strong>
-          <ol>
-            <li v-for="q in selectedQuiz.aiQuestion" :key="q.id">
-              <div>{{ q.text }}</div>
-              <ul>
-                <li>A: {{ q.optionA }}</li>
-                <li>B: {{ q.optionB }}</li>
-                <li>C: {{ q.optionC }}</li>
-                <li>D: {{ q.optionD }}</li>
-              </ul>
-              <div><strong>Correct:</strong> {{ q.correctOption }}</div>
-            </li>
-          </ol>
-        </div>
-        <div class="quiz-detail-actions">
-          <button class="btn" @click="editQuiz(selectedQuiz)">Edit</button>
-          <button class="btn delete" @click="deleteQuiz(selectedQuiz)">Delete</button>
-        </div>
-      </div>
-      <div v-if="message" :class="['message', messageType]">{{ message }}</div>
-    </div>
-  </div>
+  <v-container>
+    <v-row>
+      <v-col cols="12">
+        <v-card-title class="pl-0 text-h4 font-weight-bold">
+          Generate AI Questions
+        </v-card-title>
+        <p class="text-body-1 mt-2">Add AI-generated questions to your quiz</p>
+      </v-col>
+      
+      <!-- Simple AI Generation Form -->
+      <v-col cols="12">
+        <v-card class="elevation-3">
+          <v-card-text>
+            <v-row>
+              <v-col cols="6">
+                <v-text-field
+                  v-model="aiForm.topic"
+                  label="Topic"
+                  placeholder="e.g., Software Engineering, Math, Science..."
+                  required
+                ></v-text-field>
+              </v-col>
+              <v-col cols="3">
+                <v-text-field
+                  v-model="aiForm.numQuestions"
+                  label="Number of Questions"
+                  type="number"
+                  min="1"
+                  max="20"
+                  required
+                ></v-text-field>
+              </v-col>
+              <v-col cols="3">
+                <v-text-field
+                  v-model="aiForm.gradeLevel"
+                  label="Grade Level"
+                  placeholder="e.g., 10th Grade"
+                  required
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-textarea
+                  v-model="aiForm.instructions"
+                  label="Extra Instructions (Optional)"
+                  placeholder="Any specific instructions for AI generation..."
+                  rows="2"
+                ></v-textarea>
+              </v-col>
+            </v-row>
+          </v-card-text>
+          
+          <v-card-actions class="d-flex justify-end mb-2">
+            <v-btn
+              color="blue"
+              variant="elevated"
+              size="large"
+              @click="generateQuestions"
+              :loading="generating"
+              :disabled="!canGenerate"
+            >
+              <v-icon icon="mdi-robot" start></v-icon>
+              Generate Questions
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+
+      <!-- Generated Questions Preview -->
+      <v-col cols="12" v-if="generatedQuestions.length > 0">
+        <v-card class="elevation-3">
+          <v-card-title class="d-flex justify-space-between align-center">
+            <span>Generated Questions ({{ generatedQuestions.length }})</span>
+            <v-btn
+              color="primary"
+              variant="elevated"
+              @click="addQuestionsToQuiz"
+              :loading="adding"
+            >
+              Add to Quiz
+            </v-btn>
+          </v-card-title>
+          
+          <v-card-text>
+            <v-table class="elevation-1">
+              <thead>
+                <tr>
+                  <th class="text-center">#</th>
+                  <th class="text-left">Question</th>
+                  <th class="text-left">Options</th>
+                  <th class="text-left">Correct Answer</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(question, index) in generatedQuestions" :key="index">
+                  <td class="text-center">{{ index + 1 }}</td>
+                  <td>
+                    <span class="text-body-1">{{ question.text }}</span>
+                  </td>
+                  <td>
+                    <div v-if="question.optionA">A. {{ question.optionA }}</div>
+                    <div v-if="question.optionB">B. {{ question.optionB }}</div>
+                    <div v-if="question.optionC">C. {{ question.optionC }}</div>
+                    <div v-if="question.optionD">D. {{ question.optionD }}</div>
+                  </td>
+                  <td>
+                    <span class="font-weight-bold" style="color: green;">
+                      {{ question.correctOption }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Snackbar -->
+    <v-snackbar v-model="snackbar.show" :color="snackbar.color" rounded="pill">
+      {{ snackbar.message }}
+      <template v-slot:actions>
+        <v-btn variant="text" @click="snackbar.show = false">Close</v-btn>
+      </template>
+    </v-snackbar>
+  </v-container>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
-import apiClient from '../../services/services.js'
 
-const quiz = ref({
-  name: '',
-  topic: '',
+const router = useRouter()
+
+// AI Generation form
+const aiForm = ref({
+  topic: "",
   numQuestions: 5,
-  gradeLevel: '',
-  questionType: 'multiple-choice',
-  instructions: ''
-})
-const questions = ref([])
-const loading = ref(false)
-const saving = ref(false)
-const message = ref('')
-const messageType = ref('')
-
-const quizzes = ref([])
-const selectedQuiz = ref(null)
-const loadingQuizzes = ref(false)
-
-onMounted(() => {
-  fetchQuizzes()
+  gradeLevel: "",
+  instructions: ""
 })
 
-function addManualQuestion() {
-  questions.value.push({
-    text: '', optionA: '', optionB: '', optionC: '', optionD: '', correctOption: 'A'
-  })
-}
+// Generated questions
+const generatedQuestions = ref([])
 
-function deleteQuestion(idx) {
-  questions.value.splice(idx, 1)
-}
+// UI state
+const generating = ref(false)
+const adding = ref(false)
 
-function parseCohereResponse(text) {
-  // Split by question numbers (e.g., 1. 2. 3.)
-  const qBlocks = text.split(/\n(?=\d+\.)/).filter(Boolean);
-  const parsed = [];
-  for (const block of qBlocks) {
-    console.log('Parsing block:', block); // <-- Debug log
-    // More flexible regex for options and answer
-    const qMatch = block.match(/^(\d+\.)?\s*(.*?)\nA[\).:-]?\s*(.*?)\nB[\).:-]?\s*(.*?)\nC[\).:-]?\s*(.*?)\nD[\).:-]?\s*(.*?)\nAnswer[:\s-]*([A-D])/is);
-    if (qMatch) {
-      parsed.push({
-        text: qMatch[2].trim(),
-        optionA: qMatch[3].trim(),
-        optionB: qMatch[4].trim(),
-        optionC: qMatch[5].trim(),
-        optionD: qMatch[6].trim(),
-        correctOption: qMatch[7].trim()
-      });
-    }
+// Snackbar
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'success'
+})
+
+// Computed properties
+const canGenerate = computed(() => {
+  return aiForm.value.topic && aiForm.value.gradeLevel && aiForm.value.numQuestions > 0
+})
+
+// Methods
+function showSnackbar(message, color = 'success') {
+  snackbar.value = {
+    show: true,
+    message,
+    color
   }
-  return parsed;
 }
 
 async function generateQuestions() {
-  if (!quiz.value.topic || !quiz.value.numQuestions || !quiz.value.gradeLevel) {
-    message.value = 'Please fill in all required fields.'
-    messageType.value = 'error'
+  if (!canGenerate.value) {
+    showSnackbar('Please fill in topic, grade level, and number of questions', 'error')
     return
   }
-  loading.value = true
-  message.value = ''
+
+  // Additional validation
+  if (aiForm.value.numQuestions < 1 || aiForm.value.numQuestions > 20) {
+    showSnackbar('Number of questions must be between 1 and 20', 'error')
+    return
+  }
+
+  if (!aiForm.value.topic.trim()) {
+    showSnackbar('Please enter a valid topic', 'error')
+    return
+  }
+
+  if (!aiForm.value.gradeLevel.trim()) {
+    showSnackbar('Please enter a valid grade level', 'error')
+    return
+  }
+
+  generating.value = true
+  console.log('Starting question generation...')
+  
   try {
-    const prompt = `Generate ${quiz.value.numQuestions} multiple choice questions on the topic '${quiz.value.topic}' for grade ${quiz.value.gradeLevel}. Format each question as: 1. [Question text]\nA) [Option A]\nB) [Option B]\nC) [Option C]\nD) [Option D]\nAnswer: [A/B/C/D].${quiz.value.instructions ? ' ' + quiz.value.instructions : ''}`
-    const res = await axios.post('https://api.cohere.ai/v1/generate', {
+    const prompt = `Generate exactly ${aiForm.value.numQuestions} multiple choice questions on the topic '${aiForm.value.topic}' for grade ${aiForm.value.gradeLevel}. You must generate exactly ${aiForm.value.numQuestions} questions, no more, no less. 
+
+IMPORTANT: You must respond with ONLY valid JSON format. Do not include any other text, explanations, or formatting.
+
+Return ONLY this JSON structure:
+[
+  {
+    "text": "Question text here",
+    "optionA": "Option A text",
+    "optionB": "Option B text", 
+    "optionC": "Option C text",
+    "optionD": "Option D text",
+    "correctOption": "A"
+  }
+]
+
+Rules:
+- Use "A", "B", "C", or "D" for correctOption
+- Make sure all questions have exactly 4 options
+- Ensure the JSON is valid and properly formatted
+- Do not include any text before or after the JSON array
+
+${aiForm.value.instructions ? ' Additional instructions: ' + aiForm.value.instructions : ''}`
+    
+    console.log('Sending request to Cohere API...')
+    console.log('Prompt:', prompt)
+    
+    const response = await axios.post('https://api.cohere.ai/v1/generate', {
       model: 'command',
-      prompt,
-      max_tokens: 800,
+      prompt: prompt,
+      max_tokens: 3000,
       temperature: 0.7,
       k: 0,
       stop_sequences: [],
       return_likelihoods: 'NONE'
     }, {
       headers: {
-        'Authorization': 'Bearer IU3cGCCNmK6aDujflkqbQmjc57zlHRSmzvjJqtQR',
+        'Authorization': `Bearer ${import.meta.env.VITE_COHERE_API_KEY || 'IU3cGCCNmK6aDujflkqbQmjc57zlHRSmzvjJqtQR'}`,
         'Content-Type': 'application/json'
       }
     })
-    const text = res.data.generations[0].text
-    console.log('Cohere raw response:', text); // <-- Debug log
-    const newQuestions = parseCohereResponse(text)
-    if (newQuestions.length === 0) {
-      message.value = 'Could not parse any questions from AI response.'
-      messageType.value = 'error'
-    } else {
-      questions.value.push(...newQuestions)
-      message.value = `Added ${newQuestions.length} questions.`
-      messageType.value = 'success'
+
+    console.log('API Response received:', response.data)
+    
+    if (!response.data.generations || !response.data.generations[0]) {
+      throw new Error('Invalid response format from API')
     }
-  } catch (e) {
-    message.value = 'Error generating questions.'
-    messageType.value = 'error'
+
+    const text = response.data.generations[0].text
+    console.log('Cohere raw response text:', text)
+    
+    const parsedQuestions = parseCohereResponse(text)
+    console.log('Parsed questions result:', parsedQuestions)
+    
+    if (parsedQuestions.length > 0) {
+      generatedQuestions.value = parsedQuestions
+      showSnackbar(`Generated ${parsedQuestions.length} questions successfully`)
+    } else {
+      showSnackbar('Could not parse any questions from AI response', 'error')
+    }
+  } catch (error) {
+    console.error('Error generating questions:', error)
+    console.error('Error details:', error.response?.data || error.message)
+    showSnackbar(`Failed to generate questions: ${error.message}`, 'error')
   } finally {
-    loading.value = false
+    generating.value = false
   }
 }
 
-async function fetchQuizzes() {
-  loadingQuizzes.value = true
+function parseCohereResponse(text) {
+  console.log('Raw AI response:', text)
+  
   try {
-    const res = await apiClient.get('ai-quizzes')
-    quizzes.value = res.data
-  } catch (e) {
-    // Optionally show error
-  } finally {
-    loadingQuizzes.value = false
+    // Clean the text - remove any leading/trailing whitespace and newlines
+    const cleanedText = text.trim()
+    
+    // Try to parse the entire response as JSON first
+    try {
+      const parsedQuestions = JSON.parse(cleanedText)
+      if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
+        const validQuestions = validateAndCleanQuestions(parsedQuestions)
+        if (validQuestions.length > 0) {
+          console.log('Successfully parsed JSON questions:', validQuestions)
+          return validQuestions
+        }
+      }
+    } catch (directParseError) {
+      console.log('Direct JSON parse failed, trying to extract JSON...')
+    }
+    
+    // Try to extract JSON array from the text
+    const jsonMatch = cleanedText.match(/\[[\s\S]*\]/)
+    if (jsonMatch) {
+      const jsonString = jsonMatch[0]
+      const parsedQuestions = JSON.parse(jsonString)
+      
+      if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
+        const validQuestions = validateAndCleanQuestions(parsedQuestions)
+        if (validQuestions.length > 0) {
+          console.log('Successfully extracted and parsed JSON questions:', validQuestions)
+          return validQuestions
+        }
+      }
+    }
+    
+    // Fallback to text parsing if JSON parsing fails
+    console.log('JSON parsing failed, trying text parsing...')
+    return parseTextFormat(text)
+    
+  } catch (error) {
+    console.error('Error parsing JSON response:', error)
+    console.log('Falling back to text parsing...')
+    return parseTextFormat(text)
   }
 }
 
-async function selectQuiz(q) {
-  try {
-    const res = await apiClient.get(`ai-quizzes/${q.id}`)
-    selectedQuiz.value = res.data
-  } catch (e) {
-    selectedQuiz.value = null
-  }
-}
-
-async function deleteQuiz(q) {
-  if (!confirm('Delete this quiz?')) return
-  try {
-    await apiClient.delete(`ai-quizzes/${q.id}`)
-    quizzes.value = quizzes.value.filter(quiz => quiz.id !== q.id)
-    selectedQuiz.value = null
-    message.value = 'Quiz deleted.'
-    messageType.value = 'success'
-  } catch (e) {
-    message.value = 'Error deleting quiz.'
-    messageType.value = 'error'
-  }
-}
-
-function editQuiz(q) {
-  // Load quiz into form for editing
-  quiz.value = {
-    name: q.name,
-    topic: q.topic,
-    numQuestions: q.aiQuestion.length,
-    gradeLevel: q.gradeLevel,
-    questionType: q.questionType,
-    instructions: q.instructions
-  }
-  questions.value = q.aiQuestion.map(qq => ({
-    text: qq.text,
-    optionA: qq.optionA,
-    optionB: qq.optionB,
-    optionC: qq.optionC,
-    optionD: qq.optionD,
-    correctOption: qq.correctOption
+function validateAndCleanQuestions(questions) {
+  return questions.filter(q => {
+    // Check if all required fields exist and are not empty
+    return q.text && 
+           q.optionA && 
+           q.optionB && 
+           q.optionC && 
+           q.optionD && 
+           q.correctOption &&
+           typeof q.text === 'string' &&
+           typeof q.optionA === 'string' &&
+           typeof q.optionB === 'string' &&
+           typeof q.optionC === 'string' &&
+           typeof q.optionD === 'string' &&
+           typeof q.correctOption === 'string'
+  }).map(q => ({
+    text: q.text.trim(),
+    optionA: q.optionA.trim(),
+    optionB: q.optionB.trim(),
+    optionC: q.optionC.trim(),
+    optionD: q.optionD.trim(),
+    correctOption: q.correctOption.trim().toUpperCase()
   }))
-  selectedQuiz.value = null // Hide detail panel while editing
-  editingQuizId.value = q.id
 }
 
-const editingQuizId = ref(null)
-
-function resetForm() {
-  quiz.value = {
-    name: '',
-    topic: '',
-    numQuestions: 5,
-    gradeLevel: '',
-    questionType: 'multiple-choice',
-    instructions: ''
-  }
-  questions.value = []
-  editingQuizId.value = null
-  selectedQuiz.value = null
-}
-
-async function saveQuiz() {
-  if (!quiz.value.topic || !quiz.value.numQuestions || !quiz.value.gradeLevel || questions.value.length === 0) {
-    message.value = 'Please fill in all required fields and add at least one question.'
-    messageType.value = 'error'
-    return
-  }
-  saving.value = true
-  message.value = ''
-  try {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (editingQuizId.value) {
-      // Update existing quiz
-      await apiClient.put(`ai-quizzes/${editingQuizId.value}`, {
-        name: quiz.value.name,
-        topic: quiz.value.topic,
-        gradeLevel: quiz.value.gradeLevel,
-        questionType: quiz.value.questionType,
-        instructions: quiz.value.instructions,
-        questions: questions.value
-      })
-      message.value = 'Quiz updated successfully!'
-      messageType.value = 'success'
-      editingQuizId.value = null
-    } else {
-      // Create new quiz
-      await apiClient.post('ai-quizzes', {
-        name: quiz.value.name,
-        topic: quiz.value.topic,
-        gradeLevel: quiz.value.gradeLevel,
-        questionType: quiz.value.questionType,
-        instructions: quiz.value.instructions,
-        userId: user?.id,
-        questions: questions.value
-      })
-      message.value = 'Quiz saved successfully!'
-      messageType.value = 'success'
-      resetForm() // <-- Reset after saving new quiz
+function parseTextFormat(text) {
+  const questions = []
+  
+  // Split by question blocks (lines starting with numbers)
+  const lines = text.split('\n').filter(line => line.trim())
+  let currentQuestion = null
+  let currentOptions = []
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+    
+    // Check if this line starts a new question (starts with number and dot)
+    if (/^\d+\./.test(line)) {
+      // Save previous question if exists
+      if (currentQuestion && currentOptions.length >= 4) {
+        questions.push({
+          text: currentQuestion.replace(/^\d+\.\s*/, '').replace(/\s+\d+\.\s*/g, ' ').trim(),
+          optionA: currentOptions[0] || '',
+          optionB: currentOptions[1] || '',
+          optionC: currentOptions[2] || '',
+          optionD: currentOptions[3] || '',
+          correctOption: currentOptions[4] || 'A'
+        })
+      }
+      
+      // Start new question
+      currentQuestion = line
+      currentOptions = []
     }
-    fetchQuizzes()
-    // Optionally reset form
-    // quiz.value = { name: 'Default 5', topic: '', numQuestions: 5, gradeLevel: '', questionType: 'multiple-choice', instructions: '' }
-    // questions.value = []
-  } catch (e) {
-    message.value = 'Error saving quiz.'
-    messageType.value = 'error'
+    // Check for option A
+    else if (/^A[\)\.:-]/.test(line)) {
+      currentOptions[0] = line.replace(/^A[\)\.:-]\s*/, '').trim()
+    }
+    // Check for option B
+    else if (/^B[\)\.:-]/.test(line)) {
+      currentOptions[1] = line.replace(/^B[\)\.:-]\s*/, '').trim()
+    }
+    // Check for option C
+    else if (/^C[\)\.:-]/.test(line)) {
+      currentOptions[2] = line.replace(/^C[\)\.:-]\s*/, '').trim()
+    }
+    // Check for option D
+    else if (/^D[\)\.:-]/.test(line)) {
+      currentOptions[3] = line.replace(/^D[\)\.:-]\s*/, '').trim()
+    }
+    // Check for answer
+    else if (/^Answer[:\s-]*([A-D])/i.test(line)) {
+      const answerMatch = line.match(/^Answer[:\s-]*([A-D])/i)
+      currentOptions[4] = answerMatch ? answerMatch[1] : 'A'
+    }
+    // If line doesn't match any pattern, it might be continuation of question text
+    else if (currentQuestion && !currentQuestion.includes(line)) {
+      currentQuestion += ' ' + line
+    }
+  }
+  
+  // Don't forget the last question
+  if (currentQuestion && currentOptions.length >= 4) {
+    questions.push({
+      text: currentQuestion.replace(/^\d+\.\s*/, '').replace(/\s+\d+\.\s*/g, ' ').trim(),
+      optionA: currentOptions[0] || '',
+      optionB: currentOptions[1] || '',
+      optionC: currentOptions[2] || '',
+      optionD: currentOptions[3] || '',
+      correctOption: currentOptions[4] || 'A'
+    })
+  }
+  
+  console.log('Parsed text questions:', questions)
+  return questions
+}
+
+async function addQuestionsToQuiz() {
+  adding.value = true
+  
+  try {
+    // Store the generated questions in localStorage so QuizEdit can access them
+    localStorage.setItem('generatedQuestions', JSON.stringify(generatedQuestions.value))
+    
+    showSnackbar('Questions ready to add to quiz!')
+    
+    // Navigate back to QuizEdit - try multiple navigation methods
+    setTimeout(() => {
+      try {
+        // Try to go back to previous page
+        if (window.history.length > 1) {
+          router.go(-1)
+        } else {
+          // Fallback to QuizEdit route
+          router.push({ name: 'quizEdit', params: { id: 'new' } })
+        }
+      } catch (navError) {
+        console.error('Navigation error:', navError)
+        // Final fallback
+        window.location.href = '/admin'
+      }
+    }, 1000)
+    
+  } catch (error) {
+    console.error('Error preparing questions:', error)
+    showSnackbar('Failed to prepare questions', 'error')
   } finally {
-    saving.value = false
+    adding.value = false
   }
 }
 </script>
 
 <style scoped>
-.ai-quiz-builder {
-  max-width: 1100px;
-  margin: 2rem auto;
-  background: #f5f5f5;
-  border-radius: 12px;
-  padding: 2rem 2.5rem;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-  display: flex;
-  gap: 2rem;
+.v-table table thead th {
+  background-color: rgb(114, 26, 54) !important;
+  color: white;
+  text-transform: uppercase;
 }
-.sidebar {
-  flex: 1 1 220px;
-  background: #ececec;
-  border-radius: 8px;
-  padding: 1.5rem 1rem;
-  min-width: 220px;
-  max-width: 260px;
-  height: 700px;
-  overflow-y: auto;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.sidebar h3 {
-  margin-bottom: 0.7rem;
-}
-.quiz-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.quiz-list li {
-  padding: 0.5em 0.8em;
-  border-radius: 5px;
-  cursor: pointer;
-  background: #fff;
-  transition: background 0.2s;
-}
-.quiz-list li.selected, .quiz-list li:hover {
-  background: #a83232;
-  color: #fff;
-}
-.sidebar-loading, .sidebar-empty {
-  color: #888;
-  font-style: italic;
-}
-.main-content {
-  flex: 3 1 0;
-  display: flex;
-  flex-direction: column;
-}
-.quiz-form {
-  flex: 2 1 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.2rem 2rem;
-  background: #ececec;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-}
-.form-group {
-  flex: 1 1 220px;
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 0.5rem;
-}
-.form-group label {
-  font-weight: 600;
-  margin-bottom: 0.3rem;
-}
-.form-group.required label:after {
-  content: '*';
-  color: #b00;
-  margin-left: 0.2em;
-}
-input, textarea, select {
-  border: 1px solid #bbb;
-  border-radius: 5px;
-  padding: 0.5em;
-  font-size: 1em;
-  background: #fff;
-}
-textarea {
-  min-height: 2.5em;
-}
-.button-row {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-.btn {
-  background: #8b0000;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 0.6em 1.2em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.btn.ai {
-  background: #a83232;
-}
-.btn.save {
-  background: #4a0c0c;
-}
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.questions-list {
-  flex: 2 1 0;
-  margin-top: 2rem;
-}
-.questions-list h3 {
-  margin-bottom: 0.7rem;
-}
-.empty {
-  color: #888;
-  font-style: italic;
-}
-.scroll-area {
-  max-height: 500px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-}
-.question-card {
-  background: #fff;
-  border-radius: 7px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  padding: 1rem 1.2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  position: relative;
-}
-.q-header {
-  display: flex;
-  justify-content: space-between; /* Changed to space-between for delete button */
-  align-items: center;
-  font-weight: 600;
-  gap: 1rem;
-}
-.options {
-  display: flex;
-  gap: 0.5rem;
-}
-.options input {
-  flex: 1 1 0;
-}
-.correct-opt {
-  margin-top: 0.3rem;
-}
-.quiz-detail-panel {
-  background: #fff;
-  border-radius: 7px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  padding: 1.2rem 1.5rem;
-  margin-top: 2rem;
-}
-.quiz-detail-actions {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-.quiz-detail-actions .btn.delete {
-  background: #b00;
-}
-.message {
-  margin-top: 1.5rem;
-  padding: 0.8em 1.2em;
-  border-radius: 6px;
-  font-weight: 600;
-  text-align: center;
-}
-.message.success {
-  background: #e0ffe0;
-  color: #1a7a1a;
-  border: 1px solid #7ad67a;
-}
-.message.error {
-  background: #ffe0e0;
-  color: #a11a1a;
-  border: 1px solid #d67a7a;
-}
-.btn.new-quiz {
-  background: #4a0c0c;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 0.6em 1.2em;
-  font-weight: 600;
-  cursor: pointer;
-  margin-bottom: 1rem;
-  align-self: flex-end;
-}
-.delete-btn {
-  background: #b00;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 0.3em 0.6em;
-  font-size: 0.8em;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.delete-btn:hover {
-  background: #800;
+
+.v-table table td {
+  padding: 16px !important;
+  vertical-align: top;
+  font-size: 16px;
 }
 </style> 

@@ -33,7 +33,6 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
-
       path: "/admin/ai-quiz-builder",
       name: "admin-ai-quiz-builder",
       component: () => import("./views/admin/AiQuizBuilder.vue"),
@@ -44,13 +43,11 @@ const router = createRouter({
       name: "quizEdit",
       component: () => import("./views/admin/QuizEdit.vue"),
     },
-
     //ToDo:  Remove this POLL reference. This is a test view.
     {
       path: "/poll",
       name: "poll",
       component: () => import("./views/admin/Poll.vue"),
->>>>>>> 27225135f8782a05243dbc46e7feca4a6930f61c
     },
     //  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
     //  ToDo:  Remove RECIPE references
