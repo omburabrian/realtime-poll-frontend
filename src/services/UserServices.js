@@ -11,7 +11,6 @@ export default {
   },
 
   loginUser(loginCredentials) {
-    console.log(loginCredentials);
     return apiClient.post("login", loginCredentials, {
       headers: {
         Accept: "application/json",

@@ -14,7 +14,7 @@ onMounted(async () => {
   user.value = JSON.parse(localStorage.getItem("user"));
 });
 
-function closeSnackBar() {
+function closeSnackbar() {
   snackbar.value.value = false;
 }
 </script>
@@ -38,7 +38,7 @@ function closeSnackBar() {
           <v-btn
             :color="snackbar.color"
             variant="text"
-            @click="closeSnackBar()"
+            @click="closeSnackbar()"
           >
             Close
           </v-btn>

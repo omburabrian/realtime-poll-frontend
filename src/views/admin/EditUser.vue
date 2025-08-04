@@ -7,8 +7,6 @@ const route = useRoute();
 
 const recipe = ref({});
 
-
-
 const snackbar = ref({
   value: false,
   color: "",
@@ -90,7 +88,7 @@ function updateUser() {
       {{ snackbar.text }}
 
       <template v-slot:actions>
-        <v-btn :color="snackbar.color" variant="text" @click="closeSnackBar()">
+        <v-btn :color="snackbar.color" variant="text" @click="closeSnackbar()">
           Close
         </v-btn>
       </template>

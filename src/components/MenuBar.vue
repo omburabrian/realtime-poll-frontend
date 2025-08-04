@@ -25,9 +25,13 @@ const professorMenuItems = ref([
 ]);
 
 onMounted(async () => {
-  await getUserRoles();
   logoURL.value = ocLogo;
   user.value = JSON.parse(localStorage.getItem("user"));
+
+  //  Must be authenticated user to get user roles.
+  if (user.value !== null) {
+    await getUserRoles();
+  }
 });
 
 function logout() {
@@ -55,7 +59,9 @@ async function getUserRoles() {
             //  console.log(userRoles.value.PROFESSOR);
         })
         .catch((error) => {
-            console.log(error);
+          let defaultMessage = 'Unknown error while getting user roles';
+          const message = error?.response?.data?.message || error?.message || defaultMessage;
+          //  console.log(message);
         });
 }
 

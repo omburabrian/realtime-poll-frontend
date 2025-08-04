@@ -45,7 +45,7 @@ function showSnackbar(color, text) {
   };
 }
 //close the snackbar
-function closeSnackBar() {
+function closeSnackbar() {
   snackbar.value.value = false;
 }
 
@@ -761,7 +761,7 @@ async function dragToReorder() {
       {{ snackbar.text }}
 
       <template v-slot:actions>
-        <v-btn :color="snackbar.color" variant="text" @click="closeSnackBar()">
+        <v-btn :color="snackbar.color" variant="text" @click="closeSnackbar()">
           Close
         </v-btn>
       </template>
