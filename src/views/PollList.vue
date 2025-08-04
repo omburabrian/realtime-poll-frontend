@@ -25,6 +25,7 @@ onMounted(async () => {
    await getPolls();
 });
 
+
 async function getPolls() {
   user.value = JSON.parse(localStorage.getItem("user"));
   if (user.value !== null && user.value.id !== null) {

@@ -48,8 +48,12 @@ async function getAnswers(questionId) {
     });
 }
 
-function navigateToEdit() {
-  router.push({ name: "editPoll", params: { id: props.poll.id } });
+function navigateToEdit(pollId) {
+  if (!pollId) {
+    showSnackbar("Invalid poll ID", "error");
+    return;
+  }
+  router.push({ name: "quizEdit", params: { id: pollId } });
 }
 </script>
 
@@ -78,7 +82,7 @@ function navigateToEdit() {
             v-if="user !== null"
             size="small"
             icon="mdi-pencil"
-            @click="navigateToEdit()"
+            @click="navigateToEdit(poll.id)"
           ></v-icon>
         </v-col>
       </v-row>
