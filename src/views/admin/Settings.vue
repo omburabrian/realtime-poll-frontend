@@ -1,22 +1,15 @@
 <script setup>
 import { onMounted } from "vue";
 import { ref } from "vue";
+import { useSnackbar } from "../../composables/useSnackbar.js";
 
 const user = ref(null);
-const snackbar = ref({
-  value: false,
-  color: "",
-  text: "",
-});
+const { snackbar, showSnackbar, closeSnackBar } = useSnackbar();
 
 onMounted(async () => {
   //  await getRecipes();
   user.value = JSON.parse(localStorage.getItem("user"));
 });
-
-function closeSnackBar() {
-  snackbar.value.value = false;
-}
 </script>
 
 <template>

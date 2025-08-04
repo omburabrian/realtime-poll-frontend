@@ -51,26 +51,32 @@ function logout() {
         {{ title }}
       </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn class="mx-2" :to="{ name: 'recipes' }">
-        Recipes
-      </v-btn>
+      <v-btn class="mx-2" :to="{ name: 'recipes' }"> Recipes </v-btn>
       <v-btn v-if="user === null" class="mx-2" :to="{ name: 'login' }">
         Login
       </v-btn>
       <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'ingredients' }">
         Ingredients
       </v-btn>
-       <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'polls' }">
-        Polls/Quizzes
+      <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'poll' }">
+        Poll Test
       </v-btn>
-      <v-menu v-if="user !== null && user.role === 'admin'" location="bottom" rounded>
+      <v-menu
+        v-if="user !== null && user.role === 'admin'"
+        location="bottom"
+        rounded
+      >
         <template v-slot:activator="{ props }">
           <v-btn class="mx-2" v-bind="props">
             Admin <v-icon end>mdi-menu-down</v-icon>
           </v-btn>
         </template>
         <v-list>
-          <v-list-item v-for="(item, index) in adminMenuItems" :key="index" :to="{ name: item.name }">
+          <v-list-item
+            v-for="(item, index) in adminMenuItems"
+            :key="index"
+            :to="{ name: item.name }"
+          >
             <v-list-item-title>{{ item.title }}</v-list-item-title>
           </v-list-item>
         </v-list>
