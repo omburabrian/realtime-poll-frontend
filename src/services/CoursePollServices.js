@@ -8,7 +8,7 @@ export default {
 
   // Create a new course-poll link
   createCoursePollLink(pollId, courseId) {
-    link = { pollId, courseId };
+    const link = { pollId, courseId };
     return apiClient.post("coursePolls/", link);
   },
 

@@ -2,6 +2,9 @@
 import { onMounted, ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import PollQuestionServices from "../services/PollQuestionServices.js";
+import PollServices from "../services/PollServices.js";
+import { defineEmits } from "vue";
+const emit = defineEmits(["delete"]);
 
 const router = useRouter();
 const pollQuestions = ref([]);
@@ -24,6 +27,18 @@ async function getPollQuestions() {
     pollQuestions.value = response.data;
   } catch (error) {
     console.log(error);
+  }
+}
+
+async function PollDelete(pollId) {
+
+  
+  if (!pollId) return;
+  try {
+    await PollServices.deletePoll(pollId);
+    emit("delete");
+  } catch (error) {
+    console.error("Failed to delete poll:", error);
   }
 }
 
@@ -84,11 +99,15 @@ const totalTime = computed(() => {
 
       <!-- Right: Actions -->
       <v-col cols="12" md="3" class="d-flex justify-end">
+
         <v-btn icon variant="text" @click="navigateToStart">
           <v-icon icon="mdi-play" />
         </v-btn>
         <v-btn icon variant="text" @click="navigateToEdit(poll.id)">
           <v-icon icon="mdi-pencil" />
+        </v-btn>
+        <v-btn icon variant="text" @click="PollDelete(poll.id)">
+          <v-icon icon="mdi-delete" />
         </v-btn>
       </v-col>
     </v-row>

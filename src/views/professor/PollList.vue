@@ -3,6 +3,9 @@ import { onMounted, ref, computed } from "vue";
 import PollCard from "../../components/PollCardComponent.vue";
 import PollServices from "../../services/PollServices.js";
 import CourseServices from "../../services/CourseServices.js";
+import CoursePollServices from "../../services/CoursePollServices.js";
+import { useRouter } from 'vue-router';
+const router = useRouter();
 
 const polls = ref([]);
 const courses = ref([]);
@@ -18,7 +21,8 @@ const newPoll = ref({
   name: "",
   description: "",
   timePerQuestion: "30",
-  isPublished: false,
+  isQuiz: false,
+  courseId: null,
 });
 
 const pollsByCourse = computed(() => {
@@ -50,7 +54,6 @@ const pollsByCourse = computed(() => {
 onMounted(async () => {
   user.value = JSON.parse(localStorage.getItem("user"));
   await getPolls();
-  await getCourses();
 });
 
 async function getPolls() {
@@ -58,9 +61,10 @@ async function getPolls() {
   try {
     const response =
       user.value && user.value.id
-        ? await PollServices.getPolls(user.value.id)
+        ? await PollServices.getPollsByUserId(user.value.id)
         : await PollServices.getPolls();
     polls.value = response.data;
+    await getCourses();
   } catch (error) {
     console.log(error);
     snackbar.value.value = true;
@@ -81,11 +85,46 @@ async function getCourses() {
   }
 }
 
+async function linkCourseToPoll(pollId, courseId) {
+  try {
+    
+    await CoursePollServices.createCoursePollLink(pollId, courseId);
+    snackbar.value.value = true;
+    snackbar.value.color = "green";
+    snackbar.value.text = "Course linked successfully!";
+  } catch (error) {
+    console.log(error);
+    snackbar.value.value = true;
+    snackbar.value.color = "error";
+    snackbar.value.text = error.response?.data?.message || "Failed to link course.";
+  }
+}
+
+async function unlinkCourseFromPoll(pollId) {
+  try {
+    await deleteAllLinksForPoll(pollId);
+    snackbar.value.value = true;
+    snackbar.value.color = "green";
+    snackbar.value.text = "Course unlinked successfully!";
+  } catch (error) {
+    console.log(error);
+    snackbar.value.value = true;
+    snackbar.value.color = "error";
+    snackbar.value.text = error.response?.data?.message || "Failed to unlink course.";
+  }
+}
+
 async function addPoll() {
   isAdd.value = false;
   newPoll.value.userId = user.value.id;
+  let createdPoll = null;
   try {
-    await PollServices.addPoll(newPoll.value);
+    const response = await PollServices.addPoll(newPoll.value);
+    createdPoll = response.data;
+    if (newPoll.value.courseId) {
+      await linkCourseToPoll(createdPoll.id, newPoll.value.courseId.id);
+    }
+    
     snackbar.value.value = true;
     snackbar.value.color = "green";
     snackbar.value.text = `${newPoll.value.name} added successfully!`;
@@ -96,7 +135,13 @@ async function addPoll() {
     snackbar.value.color = "error";
     snackbar.value.text = error.response?.data?.message || "Failed to add poll.";
   }
+  navigateToEdit(createdPoll.id);
   await getPolls();
+}
+
+function navigateToEdit(pollId) {
+  if (!pollId) return;
+  router.push({ name: "quizEdit", params: { id: pollId } });
 }
 
 function openAdd() {
@@ -152,7 +197,7 @@ function closeSnackBar() {
               v-for="poll in pollList"
               :key="poll.id"
               :poll="poll"
-              @deletedList="getPolls()"
+              @delete="getPolls()"
             />
           </v-expansion-panel-text>
         </v-expansion-panel>
@@ -162,20 +207,46 @@ function closeSnackBar() {
         <v-card class="rounded-lg elevation-5">
           <v-card-title class="headline mb-2">Add Poll</v-card-title>
           <v-card-text>
-            <v-text-field v-model="newPoll.name" label="Poll Name" required />
-            <v-text-field v-model="newPoll.description" label="Class/Group" />
+            <v-text-field
+              v-model="newPoll.name"
+              label="Poll Name"
+              required
+            />
+
+            <v-text-field
+              v-model="newPoll.description"
+              label="Description"
+            />
+
+            <v-select
+              v-model="newPoll.courseId"
+              :items="[{ id: null, name: 'None' }, ...courses]"
+              item-title="name"
+              item-value="id"
+              label="Select Course"
+              return-object
+              dense
+            />
+
+            <v-radio-group
+              v-model="newPoll.isQuiz"
+              inline
+              label="Type"
+            >
+              <v-radio label="Poll" :value="false" />
+              <v-radio label="Quiz" :value="true" />
+            </v-radio-group>
+
             <v-text-field
               v-model.number="newPoll.secondsPerQuestion"
               label="Seconds per Question"
               type="number"
-            />
-            <v-switch
-              v-model="newPoll.isPublished"
+              step="1"
+              min="1"
               hide-details
-              inset
-              :label="`Publish? ${newPoll.isPublished ? 'Yes' : 'No'}`"
             />
           </v-card-text>
+
           <v-card-actions>
             <v-spacer />
             <v-btn variant="flat" color="secondary" @click="closeAdd()">Close</v-btn>
