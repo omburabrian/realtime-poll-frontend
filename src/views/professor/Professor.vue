@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted } from "vue";
 import { ref } from "vue";
-import AdminServices from "../../services/AdminServices.js";
+import ProfessorServices from "../../services/ProfessorServices.js";
 
 const user = ref(null);
 const dashboardData = ref(null);
@@ -18,7 +18,7 @@ onMounted(async () => {
 });
 
 async function getDashboardData() {
-  await AdminServices.getDashboardData()
+  await ProfessorServices.getDashboardData()
     .then((response) => {
       dashboardData.value = response.data;
     })
@@ -41,24 +41,10 @@ function closeSnackbar() {
     <div id="body">
       
       <v-row align="center" class="mb-4">
-        <v-col cols="10">
-          <v-card-title class="pl-0 text-h4 font-weight-bold">
-            Admin Dashboard
+        <v-col cols="10"
+          ><v-card-title class="pl-0 text-h4 font-weight-bold"
+            >Professor Dashboard
           </v-card-title>
-        </v-col>
-      </v-row>
-      <v-row class="mb-4">
-        <v-col cols="12">
-          <router-link to="/admin/ai-quiz-builder">
-            <v-btn color="deep-red darken-2" dark class="mb-2" block>
-              AI Quiz Builder
-            </v-btn>
-          </router-link>
-          <router-link to="/admin/ai-quiz-builder">
-            <v-btn color="primary" dark block>
-              Create AI Quiz
-            </v-btn>
-          </router-link>
         </v-col>
       </v-row>
 
@@ -67,22 +53,6 @@ function closeSnackbar() {
           <pre>
 {{ dashboardData }}
           </pre>
-        </v-col>
-      </v-row>
-
-      <v-row align="center" class="mb-4">
-        <v-col cols="10">
-          <v-card class="elevation-3 pa-4">
-            <v-card-title class="text-h5 mb-4">Quick Actions</v-card-title>
-            <div class="d-flex flex-wrap gap-4">
-              <router-link to="/admin/ai-quiz-builder" style="text-decoration: none;">
-                <v-btn color="primary" variant="elevated" size="large">
-                  <v-icon icon="mdi-robot" start></v-icon>
-                  Create AI Quiz
-                </v-btn>
-              </router-link>
-            </div>
-          </v-card>
         </v-col>
       </v-row>
 

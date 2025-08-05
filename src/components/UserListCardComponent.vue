@@ -98,7 +98,7 @@ function navigateToEdit() {
       </v-row>
     </v-card-title>
     <v-card-text class="body-1">
-      Username: &nbsp; {{ aUser.userName }}
+      Username: &nbsp; {{ aUser.username }}
     </v-card-text>
     <v-expand-transition>
       <v-card-text class="pt-0" v-show="showDetails">
