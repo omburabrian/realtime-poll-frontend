@@ -58,8 +58,8 @@ function logout() {
       <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'ingredients' }">
         Ingredients
       </v-btn>
-      <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'poll' }">
-        Poll Test
+      <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'polls' }">
+        Polls/Quizzes
       </v-btn>
       <v-menu
         v-if="user !== null && user.role === 'admin'"
