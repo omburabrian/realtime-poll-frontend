@@ -5,6 +5,9 @@ import draggable from "vuedraggable";
 import PollServices from "../../services/PollServices";
 import QuestionServices from "../../services/QuestionServices";
 import AnswerServices from "../../services/AnswerServices";
+import CourseServices from "../../services/CourseServices.js";
+
+const courses = ref([]);
 
 const route = useRoute();
 const pollId = route.params.id;
@@ -27,7 +30,18 @@ onMounted(async () => {
   await getPoll();
   await getQuestions();
   await getAnswers();
+  await getCourses();
 });
+
+async function getCourses() {
+  try {
+    const response = await CourseServices.getCourses();
+    courses.value = response.data;
+  } catch (error) {
+    console.error("Failed to load courses:", error);
+    showSnackbar("error", "Failed to load courses");
+  }
+}
 
 //snackbar logic
 const snackbar = ref({
@@ -435,14 +449,44 @@ async function dragToReorder() {
       </v-col>
       <v-col cols="12" v-if="showQuizInfo">
         <v-card class="elevation-3">
-          <v-card-text>
-            <v-text-field label="Quiz Name" v-model="poll.name"></v-text-field>
-            <v-textarea
-              label="Description"
-              v-model="poll.description"
-              rows="3"
-            ></v-textarea>
-          </v-card-text>
+          
+         <v-card-text>
+
+              <v-text-field label="Quiz Name" v-model="poll.name" />
+
+              <v-textarea
+                label="Description"
+                v-model="poll.description"
+                rows="3"
+              />
+
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="poll.courseId"
+                    :items="courses"
+                    item-title="name"
+                    item-value="id"
+                    label="Course"
+                    clearable
+                    hint="Select a course for this quiz"
+                    persistent-hint
+                  />
+                </v-col>
+
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model.number="poll.secondsPerQuestion"
+                    type="number"
+                    min="0"
+                    label="Time Per Question (seconds)"
+                    hint="Leave blank or set to 0 for unlimited"
+                    persistent-hint
+                  />
+                </v-col>
+              </v-row>
+            </v-card-text>
+
           <v-card-actions class="d-flex justify-space-between mb-2">
             <v-btn
               color="primary"
