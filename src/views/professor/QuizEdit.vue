@@ -6,8 +6,10 @@ import PollServices from "../../services/PollServices";
 import QuestionServices from "../../services/QuestionServices";
 import AnswerServices from "../../services/AnswerServices";
 import CourseServices from "../../services/CourseServices.js";
+import CoursePollServices from "../../services/CoursePollServices.js";
 
 const courses = ref([]);
+const selectedCourseId = ref(null);
 
 const route = useRoute();
 const pollId = route.params.id;
@@ -31,15 +33,61 @@ onMounted(async () => {
   await getQuestions();
   await getAnswers();
   await getCourses();
+
+  const linkedCourses = await getPollCourses();
+  if (linkedCourses.length > 0) {
+    selectedCourseId.value = linkedCourses[0].id;
+  }
+
 });
 
 async function getCourses() {
   try {
     const response = await CourseServices.getCourses();
-    courses.value = response.data;
+    courses.value = [{ id: null, name: "None" }, ...response.data];
   } catch (error) {
     console.error("Failed to load courses:", error);
     showSnackbar("error", "Failed to load courses");
+  }
+}
+
+async function getPollCourses() {
+  try {
+    const response = await CoursePollServices.getCoursesByPollId(pollId);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch courses for poll:", error);
+    showSnackbar("error", "Failed to fetch courses for poll");
+    return [];
+  }
+}
+
+async function linkCourseToPoll(pollId, courseId) {
+  try {
+    
+    await CoursePollServices.createCoursePollLink(pollId, courseId);
+    snackbar.value.value = true;
+    snackbar.value.color = "green";
+    snackbar.value.text = "Course linked successfully!";
+  } catch (error) {
+    console.log(error);
+    snackbar.value.value = true;
+    snackbar.value.color = "error";
+    snackbar.value.text = error.response?.data?.message || "Failed to link course.";
+  }
+}
+
+async function unlinkCourseFromPoll(pollId) {
+  try {
+    await CoursePollServices.deleteAllLinksForPoll(pollId);
+    snackbar.value.value = true;
+    snackbar.value.color = "green";
+    snackbar.value.text = "Course unlinked successfully!";
+  } catch (error) {
+    console.log(error);
+    snackbar.value.value = true;
+    snackbar.value.color = "error";
+    snackbar.value.text = error.response?.data?.message || "Failed to unlink course.";
   }
 }
 
@@ -111,9 +159,17 @@ async function updateQuiz() {
     return;
   }
   try {
-    await PollServices.updatePoll(poll.value.id, poll.value).then(() => {
-      showSnackbar("green", `Poll ID ${poll.value.id} updated successfully!`);
-    });
+    await PollServices.updatePoll(poll.value.id, poll.value);
+
+    // Always remove all previous course links first
+    await unlinkCourseFromPoll(poll.value.id);
+
+    // Then optionally add new one if selected
+    if (selectedCourseId.value) {
+      await linkCourseToPoll(poll.value.id, selectedCourseId.value);
+    }
+
+    showSnackbar("green", `Poll ID ${poll.value.id} updated successfully!`);
   } catch (error) {
     console.log(error);
     showSnackbar("error", "Failed to update poll");
@@ -463,7 +519,7 @@ async function dragToReorder() {
               <v-row>
                 <v-col cols="12" md="6">
                   <v-select
-                    v-model="poll.courseId"
+                    v-model="selectedCourseId"
                     :items="courses"
                     item-title="name"
                     item-value="id"
