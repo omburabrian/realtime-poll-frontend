@@ -1,10 +1,8 @@
 <script setup>
 import { onMounted } from "vue";
 import { ref } from "vue";
-import AdminServices from "../../services/AdminServices.js";
 
 const user = ref(null);
-const dashboardData = ref(null);
 
 const snackbar = ref({
   value: false,
@@ -13,27 +11,12 @@ const snackbar = ref({
 });
 
 onMounted(async () => {
-  await getDashboardData();
   user.value = JSON.parse(localStorage.getItem("user"));
 });
-
-async function getDashboardData() {
-  await AdminServices.getDashboardData()
-    .then((response) => {
-      dashboardData.value = response.data;
-    })
-    .catch((error) => {
-      console.log(error);
-        snackbar.value.value = true;
-        snackbar.value.color = "error";
-        snackbar.value.text = error.response.data.message;
-    });
-}
 
 function closeSnackbar() {
   snackbar.value.value = false;
 }
-
 </script>
 
 <template>
@@ -42,17 +25,9 @@ function closeSnackbar() {
       
       <v-row align="center" class="mb-4">
         <v-col cols="10"
-          ><v-card-title class="pl-0 text-h4 font-weight-bold"
-            >Admin Dashboard
+          ><v-card-title class="pl-0 text-h4 font-weight-bold">
+            Professor Preferences
           </v-card-title>
-        </v-col>
-      </v-row>
-
-      <v-row align="center" class="mb-4">
-        <v-col cols="10">
-          <pre>
-{{ dashboardData }}
-          </pre>
         </v-col>
       </v-row>
 

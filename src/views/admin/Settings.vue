@@ -1,22 +1,18 @@
 <script setup>
 import { onMounted } from "vue";
 import { ref } from "vue";
+import { useSnackbar } from "../../composables/useSnackbar.js";
 
 const user = ref(null);
-const snackbar = ref({
-  value: false,
-  color: "",
-  text: "",
-});
+
+//  Snackbar composable
+const { snackbar, showSnackbar, showErrorSnackbar, closeSnackbar } = useSnackbar();
 
 onMounted(async () => {
   //  await getRecipes();
   user.value = JSON.parse(localStorage.getItem("user"));
+  //  console.log(user.value);
 });
-
-function closeSnackBar() {
-  snackbar.value.value = false;
-}
 </script>
 
 <template>
@@ -38,7 +34,7 @@ function closeSnackBar() {
           <v-btn
             :color="snackbar.color"
             variant="text"
-            @click="closeSnackBar()"
+            @click="closeSnackbar()"
           >
             Close
           </v-btn>
