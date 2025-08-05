@@ -221,7 +221,7 @@ function closeSnackBar() {
             <v-select
               v-model="newPoll.courseId"
               :items="[{ id: null, title: 'None' }, ...courses]"
-              item-title="name"
+              item-title="title"
               item-value="id"
               label="Select Course"
               return-object
