@@ -39,30 +39,6 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
-      path: "/professor",
-      name: "professor",
-      component: () => import("./views/professor/Professor.vue"),
-      meta: { requiresAuth: true, requiresProfessor: true },
-    },
-    {
-      path: "/professor/polls",
-      name: "professor-polls",
-      component: () => import("./views/professor/PollList.vue"),
-      meta: { requiresAuth: true, requiresProfessor: true },
-    },
-     {
-      path: "/professor/courses",
-      name: "professor-courses",
-      component: () => import("./views/professor/CourseList.vue"),
-      meta: { requiresAuth: true, requiresProfessor: true },
-    },
-    {
-      path: "/professor/preferences",
-      name: "professor-preferences",
-      component: () => import("./views/professor/Preferences.vue"),
-      meta: { requiresAuth: true, requiresProfessor: true },
-    },
-    {
       //  ToDo:   Use this as the default landing page for all users?
       //          Or at least student users?
       path: "/polls/history",
@@ -73,7 +49,7 @@ const router = createRouter({
     {
       path: "/quiz-edit/:id",
       name: "quizEdit",
-      component: () => import("./views/admin/QuizEdit.vue"),
+      component: () => import("./views/professor/QuizEdit.vue"),
     },
     {
       path: "/admin/ai-quiz-builder",
