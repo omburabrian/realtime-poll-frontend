@@ -33,19 +33,13 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
-      path: "/admin/ai-quiz-builder",
-      name: "admin-ai-quiz-builder",
-      component: () => import("./views/admin/AiQuizBuilder.vue"),
-      meta: { requiresAuth: true, requiresAdmin: true },
-    },
-    {
       path: "/quizEdit/:id",
       name: "quizEdit",
       component: () => import("./views/admin/QuizEdit.vue"),
     },
     {
-      path: "/admin/ai-quiz-builder",
-      name: "admin-ai-quiz-builder",
+      path: "/quizEdit/:quizId/ai-builder",
+      name: "ai-quiz-builder",
       component: () => import("./views/admin/AiQuizBuilder.vue"),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
