@@ -44,7 +44,7 @@ onMounted(async () => {
 async function getCourses() {
   try {
     const response = await CourseServices.getCourses();
-    courses.value = [{ id: null, name: "None" }, ...response.data];
+    courses.value = [{ id: null, title: "None" }, ...response.data];
   } catch (error) {
     console.error("Failed to load courses:", error);
     showSnackbar("error", "Failed to load courses");
@@ -521,7 +521,7 @@ async function dragToReorder() {
                   <v-select
                     v-model="selectedCourseId"
                     :items="courses"
-                    item-title="name"
+                    item-title="title"
                     item-value="id"
                     label="Course"
                     clearable
