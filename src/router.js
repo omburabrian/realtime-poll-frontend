@@ -44,6 +44,12 @@ const router = createRouter({
       component: () => import("./views/professor/PollList.vue"),
       meta: { requiresAuth: true, requiresProfessor: true },
     },
+     {
+      path: "/professor/courses",
+      name: "professor-courses",
+      component: () => import("./views/professor/CourseList.vue"),
+      meta: { requiresAuth: true, requiresProfessor: true },
+    },
     {
       path: "/professor/preferences",
       name: "professor-preferences",
