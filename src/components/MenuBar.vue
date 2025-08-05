@@ -22,7 +22,7 @@ const professorMenuItems = ref([
   { title: "Professor Dashboard", name: "professor" },
   { title: "Professor Polls", name: "professor-polls" },
   { title: "Professor Preferences", name: "professor-preferences" },
-  { title: "Courses", name: "professor-courses" },
+  { title: "Manage Courses", name: "professor-courses" },
 ]);
 
 onMounted(async () => {
