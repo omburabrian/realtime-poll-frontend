@@ -4,34 +4,34 @@ import QuestionServices from "../services/QuestionServices";
 import UserAnswerServices from "../services/UserAnswerServices";
 import QuizProgress from "../components/QuizTimerComponent.vue";
 
-// const duration = 30;
-// const remaining = ref(duration);
+const duration = 10;
+const remaining = ref(duration);
 const currentIndex = ref(0);
 const quizTitle = "American History";
 const questions = ref([]);
 // const answers = ref([]);
 const userAnswers = ref([]); // Stores all user answers
-const pollId = 3;
+const pollId = 4;
 const pollEventUserId = ref(null);
-// // UI state
+
 // //const selectedAnswerId = ref({});
 const selectedAnswerText = ref("");
-// const isFinished = ref(false);
+const isFinished = ref(false);
 
 // // Computed properties
 const currentQuestion = computed(() => questions.value[currentIndex.value]);
-// const progress = computed(
-//   () => ((duration - remaining.value) / duration) * 100
-// );
-// const timerColor = computed(() => (remaining.value <= 10 ? "red" : "green"));
+const progress = computed(
+  () => ((duration - remaining.value) / duration) * 100
+);
+const timerColor = computed(() => (remaining.value <= 10 ? "red" : "green"));
 
-// const isAnswerSelected = computed(() => {
-//   return selectedAnswerText.trim().length > 0;
-// });
+const isAnswerSelected = computed(() => {
+  return selectedAnswerText.length > 0;
+});
 
-// const isLastQuestion = computed(
-//   () => currentIndex.value === questions.value.length - 1
-// );
+const isLastQuestion = computed(
+  () => currentIndex.value === questions.value.length - 1
+);
 
 // let interval;
 
@@ -73,17 +73,17 @@ const currentQuestion = computed(() => questions.value[currentIndex.value]);
 //   }
 // }
 
-// function startTimer() {
-//   remaining.value = duration;
-//   clearInterval(interval);
-//   interval = setInterval(() => {
-//     remaining.value--;
-//     if (remaining.value <= 0) {
-//       clearInterval(interval);
-//       submitAndNext();
-//     }
-//   }, 1000);
-// }
+function startTimer() {
+  remaining.value = duration;
+  clearInterval(interval);
+  interval = setInterval(() => {
+    remaining.value--;
+    if (remaining.value <= 0) {
+      clearInterval(interval);
+      submitAnswers();
+    }
+  }, 1000);
+}
 
 // async function submitAndNext() {
 //   clearInterval(interval);
@@ -131,33 +131,32 @@ const currentQuestion = computed(() => questions.value[currentIndex.value]);
 //   }
 // }
 
-// function nextQuestion() {
-//   if (currentIndex.value < questions.value.length - 1) {
-//     clearInterval(interval);
-//     currentIndex.value++;
-//     //startTimer();
-//   }
-// }
+function nextQuestion() {
+  if (currentIndex.value < questions.value.length - 1) {
+    clearInterval(interval);
+    currentIndex.value++;
+    startTimer();
+  }
+}
 
-// function prevQuestion() {
-//   if (currentIndex.value > 0) {
-//     clearInterval(interval);
-//     currentIndex.value--;
-//     // startTimer();
-//   }
-// }
-
-// Lifecycle hooks
+function prevQuestion() {
+  if (currentIndex.value > 0) {
+    clearInterval(interval);
+    currentIndex.value--;
+    startTimer();
+  }
+}
+let interval;
 onMounted(async () => {
   const user = JSON.parse(localStorage.getItem("user"));
   pollEventUserId.value = user?.id;
   await fetchAllQuestions();
   // await fetchAnswersForQuestion();
   // await fetchExistingAnswers();
-  //startTimer();
+  startTimer();
 });
 
-//onBeforeUnmount(() => clearInterval(interval));
+onBeforeUnmount(() => clearInterval(interval));
 
 // Snackbar functionality
 const snackbar = ref({
@@ -195,40 +194,52 @@ async function fetchAllQuestions() {
 }
 
 async function submitAnswers() {
+  const data = {
+    answer: selectedAnswerText.value,
+    pollEventUserId: pollEventUserId.value,
+    questionId: currentQuestion.value.id,
+  };
+
+  console.log("Answer payload", data);
+
   try {
-    const data = {
-      answer: selectedAnswerText.value,
-      pollEventUserId: pollEventUserId.value,
-      questionId: currentQuestion.value.id,
-    };
-
-    console.log("Answer payload", data);
-
-    //check if existing answer in the db
-    const res = await UserAnswerServices.getUserAnswers(
+    // Try to create a new answer
+    await UserAnswerServices.CreateUserAnswer(
       pollEventUserId.value,
-      currentQuestion.value.id
+      currentQuestion.value.id,
+      data
     );
-
-    //if answer exists update with new value otherwise create a new answer
-    const dbAnswers = res.data;
-
-    if (dbAnswers) {
-      await UserAnswerServices.UpdateUserAnswer(
-        pollEventUserId.value,
-        currentQuestion.value.id,
-        data
-      );
-    } else {
-      await UserAnswerServices.CreateUserAnswer(
-        pollEventUserId.value,
-        currentQuestion.value.id,
-        data
-      );
-    }
   } catch (error) {
-    console.error(error);
+    // If the answer already exists, update it instead
+    const status = error.response?.status;
+    if (status === 409 || status === 500) {
+      try {
+        await UserAnswerServices.UpdateUserAnswer(
+          pollEventUserId.value,
+          currentQuestion.value.id,
+          data
+        );
+      } catch (updateError) {
+        console.error(
+          "Update failed:",
+          updateError.response?.data || updateError.message
+        );
+        return;
+      }
+    } else {
+      console.error(
+        "Submission failed:",
+        error.response?.data || error.message
+      );
+      return;
+    }
   }
+
+  // ✅ Clear selected answer for the next question
+  selectedAnswerText.value = "";
+
+  // ✅ Move to next question
+  nextQuestion();
 }
 </script>
 
@@ -314,7 +325,7 @@ async function submitAnswers() {
             >
               {{ isLastQuestion ? "Finish" : "Next" }}
             </v-btn>
-            <v-btn @click="submitAnswers">Send</v-btn>
+            <!-- <v-btn @click="submitAnswers">Send</v-btn> -->
           </v-card-actions>
         </v-card>
 
