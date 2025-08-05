@@ -9,7 +9,9 @@ import { useSnackbar } from "../../composables/useSnackbar.js";
 const user = ref(null);   //  Current logged in user
 const users = ref([]);    //  List of users
 const userRoles = ref([]);    //  List of user user roles
-const { snackbar, showSnackbar, closeSnackBar } = useSnackbar();
+
+//  Snackbar composable
+const { snackbar, showSnackbar, showErrorSnackbar, closeSnackbar } = useSnackbar();
 
 //----------------------------------------------------------------
 onMounted(async () => {
@@ -30,7 +32,7 @@ async function getUsers() {
     })
     .catch((error) => {
       console.log(error);
-      showSnackbar(error.response.data.message, 'error');
+      showErrorSnackbar(error, "Failed to load users.");
     });
 }
 
@@ -52,7 +54,7 @@ async function getUserRoles() {
     })
     .catch((error) => {
       console.log(error);
-      showSnackbar(error.response.data.message, 'error');
+      showErrorSnackbar(error, "Failed to load user roles.");
     });
 }
 
@@ -72,8 +74,7 @@ async function handleUpdateRole({ userId, role }) {
     })
     .catch((error) => {
       console.log(error);
-      const message = error.response?.data?.message || "Error updating user ROLE";
-      showSnackbar(message, "error");
+      showErrorSnackbar(error, "Error updating user ROLE");
 
       //  Optional: Re-fetch users to revert optimistic update on failure.
       //  (In case the user did not actually get updated in the DB.)
@@ -96,8 +97,7 @@ async function handleDeleteUser(userId) {
       })
       .catch((error) => {
         console.log(error);
-        const message = error.response?.data?.message || "Error deleting user";
-        showSnackbar(message, "error");
+        showErrorSnackbar(error, "Error deleting user");
       });
   }
 }
@@ -131,7 +131,7 @@ async function handleDeleteUser(userId) {
           <v-btn
             :color="snackbar.color"
             variant="text"
-            @click="closeSnackBar()"
+            @click="closeSnackbar()"
           >
             Close
           </v-btn>

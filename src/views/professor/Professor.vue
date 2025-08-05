@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted } from "vue";
 import { ref } from "vue";
-import AdminServices from "../../services/AdminServices.js";
+import ProfessorServices from "../../services/ProfessorServices.js";
 
 const user = ref(null);
 const dashboardData = ref(null);
@@ -18,7 +18,7 @@ onMounted(async () => {
 });
 
 async function getDashboardData() {
-  await AdminServices.getDashboardData()
+  await ProfessorServices.getDashboardData()
     .then((response) => {
       dashboardData.value = response.data;
     })
@@ -43,7 +43,7 @@ function closeSnackbar() {
       <v-row align="center" class="mb-4">
         <v-col cols="10"
           ><v-card-title class="pl-0 text-h4 font-weight-bold"
-            >Admin Dashboard
+            >Professor Dashboard
           </v-card-title>
         </v-col>
       </v-row>
