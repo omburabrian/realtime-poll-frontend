@@ -28,12 +28,12 @@ const newPoll = ref({
 const pollsByCourse = computed(() => {
   const grouped = {};
   for (const course of courses.value) {
-    grouped[course.name] = [];
+    grouped[course.title] = [];
   }
 
   for (const poll of polls.value) {
     const course = poll.courses?.[0] || null; // assuming one course per poll
-    const courseName = course?.name || "Uncategorized";
+    const courseName = course?.title || "Uncategorized";
     if (!grouped[courseName]) grouped[courseName] = [];
     grouped[courseName].push(poll);
   }
@@ -220,7 +220,7 @@ function closeSnackBar() {
 
             <v-select
               v-model="newPoll.courseId"
-              :items="[{ id: null, name: 'None' }, ...courses]"
+              :items="[{ id: null, title: 'None' }, ...courses]"
               item-title="name"
               item-value="id"
               label="Select Course"
