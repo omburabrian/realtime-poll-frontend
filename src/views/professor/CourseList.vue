@@ -12,7 +12,7 @@ const snackbar = ref({
 // Add/Edit State
 const isDialogOpen = ref(false);
 const isEditing = ref(false);
-const editedCourse = ref({ id: null, name: "" });
+const editedCourse = ref({ id: null, title: "" });
 
 // Fetch courses on mount
 onMounted(async () => {
@@ -31,7 +31,7 @@ async function getCourses() {
 
 function openAddDialog() {
   isEditing.value = false;
-  editedCourse.value = { id: null, name: "" };
+  editedCourse.value = { id: null, title: "" };
   isDialogOpen.value = true;
 }
 
@@ -42,19 +42,19 @@ function openEditDialog(course) {
 }
 
 async function saveCourse() {
-  if (!editedCourse.value.name.trim()) {
-    showSnackbar("error", "Course name is required.");
+  if (!editedCourse.value.title.trim()) {
+    showSnackbar("error", "Course title is required.");
     return;
   }
 
   try {
     if (isEditing.value) {
       await CourseServices.updateCourse(editedCourse.value.id, {
-        name: editedCourse.value.name,
+        title: editedCourse.value.title,
       });
       showSnackbar("green", "Course updated.");
     } else {
-      await CourseServices.addCourse({ name: editedCourse.value.name });
+      await CourseServices.addCourse({ title: editedCourse.value.title });
       showSnackbar("green", "Course added.");
     }
     isDialogOpen.value = false;
@@ -98,7 +98,7 @@ function showSnackbar(color, text) {
 
   
       <v-card v-for="course in courses" :key="course.id" class="mb-2 pa-3 d-flex justify-between align-center">
-        <div class="text-subtitle-1 font-weight-medium">{{ course.name }}</div>
+        <div class="text-subtitle-1 font-weight-medium">{{ course.title }}</div>
         <div>
           <v-btn icon variant="text" @click="openEditDialog(course)">
             <v-icon icon="mdi-pencil" />
@@ -115,8 +115,8 @@ function showSnackbar(color, text) {
           <v-card-title class="headline mb-2">{{ isEditing ? 'Edit' : 'Add' }} Course</v-card-title>
           <v-card-text>
             <v-text-field
-              v-model="editedCourse.name"
-              label="Course Name"
+              v-model="editedCourse.title"
+              label="Course Title"
               required
             />
           </v-card-text>

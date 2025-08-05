@@ -44,7 +44,7 @@ async function loadTestData_courses() {
 
   await AdminServices.loadTestData_courses()
     .then((response) => {
-      console.log(response);
+      //  console.log(response);
       showSnackbar(response?.data?.message || "Test data loaded successfully for COURSES");
     })
     .catch((error) => {
