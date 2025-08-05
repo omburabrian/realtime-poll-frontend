@@ -1,18 +1,17 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import CourseServices from "../../services/CourseServices.js";
+import { useSnackbar } from "../../composables/useSnackbar.js";
 
 const courses = ref([]);
-const snackbar = ref({
-  value: false,
-  color: "",
-  text: "",
-});
 
 // Add/Edit State
 const isDialogOpen = ref(false);
 const isEditing = ref(false);
 const editedCourse = ref({ id: null, title: "" });
+
+//  Snackbar composable
+const { snackbar, showSnackbar, showErrorSnackbar, closeSnackbar } = useSnackbar();
 
 // Fetch courses on mount
 onMounted(async () => {
@@ -25,7 +24,7 @@ async function getCourses() {
     courses.value = response.data;
   } catch (error) {
     console.error(error);
-    showSnackbar("error", "Failed to load courses.");
+    showErrorSnackbar(error, "Failed to load courses.");
   }
 }
 
@@ -43,7 +42,7 @@ function openEditDialog(course) {
 
 async function saveCourse() {
   if (!editedCourse.value.title.trim()) {
-    showSnackbar("error", "Course title is required.");
+    showErrorSnackbar(null, "Course title is required.");
     return;
   }
 
@@ -52,34 +51,28 @@ async function saveCourse() {
       await CourseServices.updateCourse(editedCourse.value.id, {
         title: editedCourse.value.title,
       });
-      showSnackbar("green", "Course updated.");
+      showSnackbar("Course updated.");
     } else {
       await CourseServices.addCourse({ title: editedCourse.value.title });
-      showSnackbar("green", "Course added.");
+      showSnackbar("Course added.");
     }
     isDialogOpen.value = false;
     await getCourses();
   } catch (error) {
     console.error(error);
-    showSnackbar("error", "Failed to save course.");
+    showErrorSnackbar(error, "Failed to save course.");
   }
 }
 
 async function deleteCourse(courseId) {
   try {
     await CourseServices.deleteCourse(courseId);
-    showSnackbar("green", "Course deleted.");
+    showSnackbar("Course deleted.");
     await getCourses();
   } catch (error) {
     console.error(error);
-    showSnackbar("error", "Failed to delete course.");
+    showErrorSnackbar(error, "Failed to delete course.");
   }
-}
-
-function showSnackbar(color, text) {
-  snackbar.value.color = color;
-  snackbar.value.text = text;
-  snackbar.value.value = true;
 }
 </script>
 
@@ -132,7 +125,7 @@ function showSnackbar(color, text) {
       <v-snackbar v-model="snackbar.value" rounded="pill">
         {{ snackbar.text }}
         <template v-slot:actions>
-          <v-btn :color="snackbar.color" variant="text" @click="snackbar.value = false">Close</v-btn>
+          <v-btn :color="snackbar.color" variant="text" @click="closeSnackbar()">Close</v-btn>
         </template>
       </v-snackbar>
     </div>
