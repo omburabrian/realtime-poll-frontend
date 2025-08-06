@@ -3,31 +3,28 @@ import { onMounted } from "vue";
 import { ref } from "vue";
 import ProfessorServices from "../../services/ProfessorServices.js";
 import UserServices from "../../services/UserServices.js";
+import { useSnackbar } from "../../composables/useSnackbar.js";
 
 const user = ref(null);     //  Current logged in user
 const userRoles = ref([]);  //  List of user user roles
 const polls = ref(null);    //  List of polls
 
-const snackbar = ref({
-    value: false,
-    color: "",
-    text: "",
-});
+//  Snackbar composable
+const { snackbar, showErrorSnackbar, closeSnackbar } = useSnackbar();
 
 //----------------------------------------------------------------
 onMounted(async () => {
-    await getUserRoles();
     user.value = JSON.parse(localStorage.getItem("user"));
     //  console.log(user.value);
+
+    //  Must be authenticated user to get user roles.
+    if (user.value !== null) {
+        await getUserRoles();
+    }
 });
 
-//----------------------------------------------------------------
-function closeSnackbar() {
-    snackbar.value.value = false;
-}
-
 function getUserFirstNameLastName() {
-  return user.value?.firstName + " " + user.value?.lastName;
+    return user.value?.firstName + " " + user.value?.lastName;
 }
 
 //----------------------------------------------------------------
@@ -44,9 +41,7 @@ async function getUserRoles() {
         })
         .catch((error) => {
             console.log(error);
-            snackbar.value.value = true;
-            snackbar.value.color = "error";
-            snackbar.value.text = error.response.data.message;
+            showErrorSnackbar(error, "Failed to load user roles.");
         });
 }
 
@@ -62,8 +57,8 @@ async function getUserRoles() {
 
             <v-row align="center" class="mb-4">
                 <v-col cols="10"><v-card-title class="pl-0 text-h4 font-weight-bold">
-                    Polls for Professor {{ getUserFirstNameLastName() }}
-                </v-card-title>
+                        Polls for Professor {{ getUserFirstNameLastName() }}
+                    </v-card-title>
                 </v-col>
             </v-row>
 

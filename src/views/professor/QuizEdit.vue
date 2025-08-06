@@ -376,10 +376,10 @@ async function saveAnswers(question) {
         id: answer.id,
         ...answerData,
       });
-      console.log("Answer updated:", answerData);
+      //  console.log("Answer updated:", answerData);
     } else {
       await AnswerServices.createAnswer(question.id, answerData);
-      console.log("Answer created:", answerData);
+      //  console.log("Answer created:", answerData);
     }
   }
 }

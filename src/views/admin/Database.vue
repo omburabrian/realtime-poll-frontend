@@ -22,7 +22,7 @@ async function loadTestData_users() {
       showSnackbar(response?.data?.message || "Test data loaded successfully for USERS");
     })
     .catch((error) => {
-      console.log(error);
+      //  console.log(error);
       showErrorSnackbar(error, "Error loading test data for USERS");
     });
 }
@@ -78,13 +78,13 @@ async function loadTestData_courses() {
 
               <v-spacer></v-spacer>
 
-              <v-btn variant="flat" color="primary" class="mb-2" @click="loadTestData_pollsQuestionsAnswers()">
+              <v-btn variant="flat" color="primary" class="mb-5" @click="loadTestData_pollsQuestionsAnswers()">
                 Load Polls (Quizzes)
               </v-btn>
 
               <v-spacer></v-spacer>
 
-              <v-btn variant="flat" color="primary" class="mb-2" @click="loadTestData_courses()">
+              <v-btn variant="flat" color="primary" class="mb-5" @click="loadTestData_courses()">
                 Load Courses
               </v-btn>
 
