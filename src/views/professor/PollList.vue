@@ -32,9 +32,6 @@ const newPoll = ref({
 //----------------------------------------------------------------
 const pollsByCourse = computed(() => {
     const grouped = {};
-    for (const course of courses.value) {
-        grouped[course.title] = [];
-    }
 
     //  This displays 3x when the view is loaded.  (?) -> This is because this is called whenever the values update
     console.log("const pollsByCourse = computed(() => {");
@@ -44,20 +41,22 @@ const pollsByCourse = computed(() => {
     for (const poll of polls.value) {
         const course = poll.courses?.[0] || null; // assuming one course per poll
         const courseName = course?.title || "Uncategorized";
-        if (!grouped[courseName]) grouped[courseName] = [];
-        grouped[courseName].push(poll);
-    }
+        (grouped[courseName] ??= []).push(poll);
+  }
 
     // Apply search filter
-    if (search.value.trim() === "") return grouped;
+   const q = search.value.trim().toLowerCase();
+    if (!q) return grouped;
 
     const filtered = {};
     for (const [courseName, coursePolls] of Object.entries(grouped)) {
         const matching = coursePolls.filter(p =>
-            p.name.toLowerCase().includes(search.value.toLowerCase())
+        (p.name || "").toLowerCase().includes(q)
         );
-        if (matching.length > 0) filtered[courseName] = matching;
+        if (matching.length) filtered[courseName] = matching; // keep only non-empty
     }
+    
+    
     return filtered;
 });
 
@@ -203,15 +202,26 @@ function closeAdd() {
             </v-row>
 
             <v-expansion-panels multiple>
-                <v-expansion-panel v-for="(pollList, courseName) in pollsByCourse" :key="courseName">
-                    <v-expansion-panel-title class="text-h6 font-weight-medium">
-                        {{ courseName }}
+                <v-expansion-panel
+                    v-for="(pollList, courseName) in pollsByCourse"
+                    :key="courseName"
+                >
+                    <v-expansion-panel-title class="text-h6 font-weight-medium d-flex align-center justify-space-between">
+                    <span>{{ courseName }}</span>
+                    <v-chip class="ml-2" size="small" variant="flat">{{ pollList.length }}</v-chip>
                     </v-expansion-panel-title>
+
                     <v-expansion-panel-text>
-                        <PollCard v-for="poll in pollList" :key="poll.id" :poll="poll" @delete="getPolls()" />
+                    <PollCard v-for="poll in pollList" :key="poll.id" :poll="poll" @delete="getPolls()" />
                     </v-expansion-panel-text>
                 </v-expansion-panel>
             </v-expansion-panels>
+
+            <!-- Optional: empty state -->
+            <div v-if="Object.keys(pollsByCourse).length === 0" class="text-body-2 mt-4">
+            No polls found{{ search ? ` for "${search}"` : "" }}.
+            </div>
+
 
             <v-dialog persistent v-model="isAdd" width="800">
                 <v-card class="rounded-lg elevation-5">
