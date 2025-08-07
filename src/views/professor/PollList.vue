@@ -20,6 +20,7 @@ const polls = ref([]);      //  List of polls
 const courses = ref([]);
 const search = ref("");
 const isAdd = ref(false);
+const expanded = ref([]); // which panels are open
 
 const newPoll = ref({
     name: "",
@@ -71,6 +72,10 @@ onMounted(async () => {
 
     await getPolls();
 });
+
+//----------------------------------------------------------------
+
+//----------------------------------------------------------------
 
 //----------------------------------------------------------------
 function getUserFirstNameLastName() {
@@ -196,12 +201,12 @@ function closeAdd() {
                 </v-col>
                 <v-col cols="4" class="d-flex justify-end align-center">
                     <v-text-field v-model="search" label="Search quizzes..." prepend-inner-icon="mdi-magnify"
-                        hide-details dense clearable class="mr-4"></v-text-field>
+                        hide-details dense clearable class="mr-4"   @click:clear="search = ''"></v-text-field>
                     <v-btn v-if="user !== null" color="accent" @click="openAdd()">Add</v-btn>
                 </v-col>
             </v-row>
 
-            <v-expansion-panels multiple>
+            <v-expansion-panels v-model = "expanded" multiple>
                 <v-expansion-panel
                     v-for="(pollList, courseName) in pollsByCourse"
                     :key="courseName"
