@@ -36,7 +36,7 @@ const pollsByCourse = computed(() => {
         grouped[course.title] = [];
     }
 
-    //  This displays 3x when the view is loaded.  (?)
+    //  This displays 3x when the view is loaded.  (?) -> This is because this is called whenever the values update
     console.log("const pollsByCourse = computed(() => {");
     console.log("courses: " + courses);
     console.log("polls: " + polls);
