@@ -59,12 +59,10 @@ const pollsByCourse = computed(() => {
 //----------------------------------------------------------------
 onMounted(async () => {
     user.value = JSON.parse(localStorage.getItem("user"));
-
     //  Must be authenticated user to get user roles.
     if (user.value !== null) {
         await getUserRoles();
     }
-
     await getPolls();
 });
 
@@ -195,15 +193,18 @@ function closeAdd() {
         <div id="body">
 
             <v-row align="center" class="mb-4">
+
                 <v-col cols="8"><v-card-title class="pl-0 text-h4 font-weight-bold">
                         Polls for Professor {{ getUserFirstNameLastName() }}
                     </v-card-title>
                 </v-col>
+
                 <v-col cols="4" class="d-flex justify-end align-center">
                     <v-text-field v-model="search" label="Search quizzes..." prepend-inner-icon="mdi-magnify"
                         hide-details dense clearable class="mr-4"   @click:clear="search = ''"></v-text-field>
                     <v-btn v-if="user !== null" color="accent" @click="openAdd()">Add</v-btn>
                 </v-col>
+
             </v-row>
 
             <v-expansion-panels multiple v-model="expandedPanels">
