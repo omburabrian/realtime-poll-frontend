@@ -60,7 +60,19 @@ async function login() {
     const response = await UserServices.loginUser(loginCredentials.value);
     window.localStorage.setItem("user", JSON.stringify(response.data));
     showSnackbar("Login successful!", "green");
-    router.push({ name: "polls-history" });
+
+    const userRolesResponse = await UserServices.getUserRoles();
+    const userRoles = userRolesResponse?.data;
+
+    //  Set login landing page based on user's ROLE.
+    if (response.data.role === userRoles.ADMIN) {
+      router.push({ name: "admin" });
+    } else if (response.data.role === userRoles.PROFESSOR) {
+      router.push({ name: "professor-polls" });
+    } else {  //  Regular STUDENT user = userRoles.USER
+      router.push({ name: "polls-history" });
+    }
+
   } catch (error) {
     //  console.error("Login failed:", error);
     showErrorSnackbar(error);   //  Let the snackbar handle drilling down to the error message.
