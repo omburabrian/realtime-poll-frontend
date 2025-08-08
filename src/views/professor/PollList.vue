@@ -20,7 +20,7 @@ const polls = ref([]);      //  List of polls
 const courses = ref([]);
 const search = ref("");
 const isAdd = ref(false);
-const expandedPanels = ref([]);
+const expandedPanels = ref([]);     //  List of expanded panels
 
 const newPoll = ref({
     name: "",
@@ -33,11 +33,6 @@ const newPoll = ref({
 //----------------------------------------------------------------
 const pollsByCourse = computed(() => {
     const grouped = {};
-
-    //  This displays 3x when the view is loaded.  (?) -> This is because this is called whenever the values update
-    console.log("const pollsByCourse = computed(() => {");
-    console.log("courses: " + courses);
-    console.log("polls: " + polls);
 
     for (const poll of polls.value) {
         const course = poll.courses?.[0] || null; // assuming one course per poll
@@ -105,10 +100,11 @@ async function getPolls() {
         polls.value = response.data;
         await getCourses();
 
-        // Wait for the computed property to update after fetching new data
+        //  Wait for DOM to be updated (with getCourses(), above) before proceeding.
         await nextTick();
 
-        // Programmatically expand all panels
+        //  Programmatically expand all panels after the courses are loaded above (nextTick()).
+        //  ToDo:  How does this force the panels to expand?  Something built-in to Vue.js?
         if (pollsByCourse.value) {
             expandedPanels.value = Object.keys(pollsByCourse.value);
         }
@@ -205,12 +201,13 @@ function closeAdd() {
                 </v-col>
                 <v-col cols="4" class="d-flex justify-end align-center">
                     <v-text-field v-model="search" label="Search quizzes..." prepend-inner-icon="mdi-magnify"
-                        hide-details dense clearable class="mr-4"></v-text-field>
+                        hide-details dense clearable class="mr-4"   @click:clear="search = ''"></v-text-field>
                     <v-btn v-if="user !== null" color="accent" @click="openAdd()">Add</v-btn>
                 </v-col>
             </v-row>
 
             <v-expansion-panels multiple v-model="expandedPanels">
+
                 <v-expansion-panel
                     v-for="(pollList, courseName) in pollsByCourse"
                     :key="courseName"
