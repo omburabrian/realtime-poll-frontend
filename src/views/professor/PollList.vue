@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, nextTick } from "vue";
 import PollCard from "../../components/PollCardComponent.vue";
 import PollServices from "../../services/PollServices.js";
 import CourseServices from "../../services/CourseServices.js";
@@ -20,6 +20,7 @@ const polls = ref([]);      //  List of polls
 const courses = ref([]);
 const search = ref("");
 const isAdd = ref(false);
+const expandedPanels = ref([]);
 
 const newPoll = ref({
     name: "",
@@ -103,6 +104,14 @@ async function getPolls() {
                 : await PollServices.getPolls();
         polls.value = response.data;
         await getCourses();
+
+        // Wait for the computed property to update after fetching new data
+        await nextTick();
+
+        // Programmatically expand all panels
+        if (pollsByCourse.value) {
+            expandedPanels.value = Object.keys(pollsByCourse.value);
+        }
     } catch (error) {
         console.log(error);
         showErrorSnackbar(error, "Failed to load polls.");
@@ -201,10 +210,11 @@ function closeAdd() {
                 </v-col>
             </v-row>
 
-            <v-expansion-panels multiple>
+            <v-expansion-panels multiple v-model="expandedPanels">
                 <v-expansion-panel
                     v-for="(pollList, courseName) in pollsByCourse"
                     :key="courseName"
+                    :value="courseName"
                 >
                     <v-expansion-panel-title class="text-h6 font-weight-medium d-flex align-center justify-space-between">
                     <span>{{ courseName }}</span>
@@ -254,7 +264,7 @@ function closeAdd() {
             <v-snackbar v-model="snackbar.value" rounded="pill">
                 {{ snackbar.text }}
                 <template v-slot:actions>
-                    <v-btn :color="snackbar.color" variant="text" @click="closeSnackBar()">Close</v-btn>
+                    <v-btn :color="snackbar.color" variant="text" @click="closeSnackbar()">Close</v-btn>
                 </template>
             </v-snackbar>
         </div>
