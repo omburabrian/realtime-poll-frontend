@@ -148,10 +148,6 @@ function isProfessor() {
         </v-list>
       </v-menu>
 
-      <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'poll' }">
-        Poll Test
-      </v-btn>
-
       <v-menu v-if="user !== null" min-width="200px" rounded>
         <template v-slot:activator="{ props }">
           <v-btn icon v-bind="props">
