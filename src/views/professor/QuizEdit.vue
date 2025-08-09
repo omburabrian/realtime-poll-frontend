@@ -850,8 +850,18 @@ async function dragToReorder() {
               <v-spacer />
               <v-btn
                 variant="flat"
+                color="secondary"
+                class="mr-3 px-6"
+                @click="
+                  addQuestionDialog ? closeAddQuestion() : closeEditQuestion()
+                "
+              >
+                Cancel
+              </v-btn>
+              <v-btn
+                variant="flat"
                 color="primary"
-                class="mr-3"
+                class="mr-3 px-6"
                 @click="
                   editQuestionDialog
                     ? updateQuestionAndAnswer()
