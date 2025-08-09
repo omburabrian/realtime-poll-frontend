@@ -27,9 +27,9 @@ async function loadTestData_users() {
     });
 }
 
-async function loadTestData_pollsQuestionsAnswers() {
+async function loadTestData_polls() {
 
-  await AdminServices.loadTestData_pollsQuestionsAnswers()
+  await AdminServices.loadTestData_polls()
     .then((response) => {
       console.log(response);
       showSnackbar(response?.data?.message || "Test data loaded successfully for POLLS");
@@ -78,8 +78,8 @@ async function loadTestData_courses() {
 
               <v-spacer></v-spacer>
 
-              <v-btn variant="flat" color="primary" class="mb-5" @click="loadTestData_pollsQuestionsAnswers()">
-                Load Polls (Quizzes)
+              <v-btn variant="flat" color="primary" class="mb-5" @click="loadTestData_polls()">
+                Load Polls (Discussion Polls and Quizzes)
               </v-btn>
 
               <v-spacer></v-spacer>
