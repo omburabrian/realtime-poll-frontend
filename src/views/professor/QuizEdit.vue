@@ -38,7 +38,6 @@ onMounted(async () => {
   if (linkedCourses.length > 0) {
     selectedCourseId.value = linkedCourses[0].id;
   }
-
 });
 
 async function getCourses() {
@@ -64,7 +63,6 @@ async function getPollCourses() {
 
 async function linkCourseToPoll(pollId, courseId) {
   try {
-    
     await CoursePollServices.createCoursePollLink(pollId, courseId);
     snackbar.value.value = true;
     snackbar.value.color = "green";
@@ -73,7 +71,8 @@ async function linkCourseToPoll(pollId, courseId) {
     console.log(error);
     snackbar.value.value = true;
     snackbar.value.color = "error";
-    snackbar.value.text = error.response?.data?.message || "Failed to link course.";
+    snackbar.value.text =
+      error.response?.data?.message || "Failed to link course.";
   }
 }
 
@@ -87,7 +86,8 @@ async function unlinkCourseFromPoll(pollId) {
     console.log(error);
     snackbar.value.value = true;
     snackbar.value.color = "error";
-    snackbar.value.text = error.response?.data?.message || "Failed to unlink course.";
+    snackbar.value.text =
+      error.response?.data?.message || "Failed to unlink course.";
   }
 }
 
@@ -301,6 +301,11 @@ function closeAddQuestion() {
   addQuestionDialog.value = false;
 }
 
+//close edit question Dialog
+function closeEditQuestion() {
+  editQuestionDialog.value = false;
+}
+
 //edit question and its answers
 function editQuestion(item) {
   // Prepare answers array
@@ -505,43 +510,41 @@ async function dragToReorder() {
       </v-col>
       <v-col cols="12" v-if="showQuizInfo">
         <v-card class="elevation-3">
-          
-         <v-card-text>
+          <v-card-text>
+            <v-text-field label="Quiz Name" v-model="poll.name" />
 
-              <v-text-field label="Quiz Name" v-model="poll.name" />
+            <v-textarea
+              label="Description"
+              v-model="poll.description"
+              rows="3"
+            />
 
-              <v-textarea
-                label="Description"
-                v-model="poll.description"
-                rows="3"
-              />
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="selectedCourseId"
+                  :items="courses"
+                  item-title="title"
+                  item-value="id"
+                  label="Course"
+                  clearable
+                  hint="Select a course for this quiz"
+                  persistent-hint
+                />
+              </v-col>
 
-              <v-row>
-                <v-col cols="12" md="6">
-                  <v-select
-                    v-model="selectedCourseId"
-                    :items="courses"
-                    item-title="title"
-                    item-value="id"
-                    label="Course"
-                    clearable
-                    hint="Select a course for this quiz"
-                    persistent-hint
-                  />
-                </v-col>
-
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model.number="poll.secondsPerQuestion"
-                    type="number"
-                    min="0"
-                    label="Time Per Question (seconds)"
-                    hint="Leave blank or set to 0 for unlimited"
-                    persistent-hint
-                  />
-                </v-col>
-              </v-row>
-            </v-card-text>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model.number="poll.secondsPerQuestion"
+                  type="number"
+                  min="0"
+                  label="Time Per Question (seconds)"
+                  hint="Leave blank or set to 0 for unlimited"
+                  persistent-hint
+                />
+              </v-col>
+            </v-row>
+          </v-card-text>
 
           <v-card-actions class="d-flex justify-space-between mb-2">
             <v-btn
@@ -689,7 +692,12 @@ async function dragToReorder() {
                   ? "Edit Question"
                   : ""
               }}
-              <v-btn v-if="addQuestionDialog" icon @click="closeAddQuestion">
+              <v-btn
+                icon
+                @click="
+                  addQuestionDialog ? closeAddQuestion() : closeEditQuestion()
+                "
+              >
                 <v-icon>mdi-close</v-icon>
               </v-btn>
             </v-card-title>
@@ -842,8 +850,18 @@ async function dragToReorder() {
               <v-spacer />
               <v-btn
                 variant="flat"
+                color="secondary"
+                class="mr-3 px-6"
+                @click="
+                  addQuestionDialog ? closeAddQuestion() : closeEditQuestion()
+                "
+              >
+                Cancel
+              </v-btn>
+              <v-btn
+                variant="flat"
                 color="primary"
-                class="mr-3"
+                class="mr-3 px-6"
                 @click="
                   editQuestionDialog
                     ? updateQuestionAndAnswer()
