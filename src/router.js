@@ -67,6 +67,14 @@ const router = createRouter({
       component: () => import("./views/professor/Preferences.vue"),
       meta: { requiresAuth: true, requiresProfessor: true },
     },
+    {
+      //  ToDo:   Use this as the default landing page for all users?
+      //          Or at least student users?
+      path: "/polls/history",
+      name: "polls-history",
+      component: () => import("./views/PollsHistory.vue"),
+      //  meta: { requiresAuth: true, },
+    },
     //ToDo:  Remove this POLL reference. This is a test view.
     {
       path: "/poll",
