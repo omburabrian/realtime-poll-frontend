@@ -1,14 +1,8 @@
 import apiClient from "./services";
 export default {
   // Create User Answer
-  CreateUserAnswer(pollEventUserId, questionId, data) {
-    return apiClient.post(
-      "user-answers/pol-event-user/" +
-        pollEventUserId +
-        "/question/" +
-        questionId,
-      data
-    );
+  CreateUserAnswer(answer) {
+    return apiClient.post("user-answers/", answer);
   },
   UpdateUserAnswer(pollEventUserId, questionId, data) {
     return apiClient.put(

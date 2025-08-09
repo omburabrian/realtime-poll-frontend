@@ -7,15 +7,19 @@ import QuizProgress from "../components/QuizTimerComponent.vue";
 const duration = 10;
 const remaining = ref(duration);
 const currentIndex = ref(0);
+
 const quizTitle = "American History";
+
 const questions = ref([]);
 // const answers = ref([]);
 const userAnswers = ref([]); // Stores all user answers
-const pollId = 4;
+const pollId = 17;
+
+const user = ref(null);
 const pollEventUserId = ref(null);
 
 // //const selectedAnswerId = ref({});
-const selectedAnswerText = ref("");
+const answerText = ref("");
 const isFinished = ref(false);
 
 // // Computed properties
@@ -26,52 +30,21 @@ const progress = computed(
 const timerColor = computed(() => (remaining.value <= 10 ? "red" : "green"));
 
 const isAnswerSelected = computed(() => {
-  return selectedAnswerText.length > 0;
+  return answerText.length > 0;
 });
 
 const isLastQuestion = computed(
   () => currentIndex.value === questions.value.length - 1
 );
 
-// let interval;
-
-// // Watch for question changes to load existing answers
-// watch(currentQuestion, (newQuestion) => {
-//   if (newQuestion) {
-//     loadExistingAnswer();
-//   }
-// });
-
-// watch(currentQuestion, (q) => {
-//   if (!q) return;
-
-//   const saved = userAnswers.value[q.id];
-
-//   if (q.type === "short_answer") {
-//     userAnswers.value = saved || "";
-//   }
-// } else {
-//   selectedAnswerId.value = saved || null;
-// }
-//});
-
-// function loadExistingAnswer() {
-//   const existingAnswer = userAnswers.value.find(
-//     (a) => a.questionId === currentQuestion.value.id
-//   );
-
-//   if (existingAnswer) {
-//     if (currentQuestion.value.type === "short_answer") {
-//       selectedAnswerText.value = existingAnswer.answer;
-//     }
-//     // } else {
-//     //   selectedAnswerId.value = existingAnswer.answer;
-//     // }
-//   } else {
-//     selectedAnswerText.value = "";
-//     // selectedAnswerId.value = null;
-//   }
-// }
+onMounted(async () => {
+  user.value = JSON.parse(localStorage.getItem("user"));
+  pollEventUserId.value = user.value.id;
+  await fetchAllQuestions();
+  // await fetchAnswersForQuestion();
+  // await fetchExistingAnswers();
+  startTimer();
+});
 
 function startTimer() {
   remaining.value = duration;
@@ -85,57 +58,14 @@ function startTimer() {
   }, 1000);
 }
 
-// async function submitAndNext() {
-//   clearInterval(interval);
-
-//   try {
-//     const answerData = {
-//       answer: selectedAnswerText.value,
-//       pollEventUserId: pollEventUserId,
-//     };
-
-//     // Update  local answers store
-//     const existingIndex = userAnswers.value.findIndex(
-//       (a) => a.questionId === currentQuestion.value.id
-//     );
-
-//     if (existingIndex >= 0) {
-//       userAnswers.value[existingIndex] = answerData;
-//     } else {
-//       userAnswers.value.push(answerData);
-//     }
-//     console.log("Submitting:", {
-//       questionId: currentQuestion.value.id,
-//       ...answerData,
-//     });
-//     // Submit to backend
-//     await UserAnswerServices.CreateUserAnswer(
-//       pollEventUserId,
-//       currentQuestion.value.id,
-//       answerData
-//       // Only send necessary data
-//     );
-
-//     // Move to next question or finish
-//     if (currentIndex.value + 1 < questions.value.length) {
-//       currentIndex.value++;
-//       startTimer();
-//     } else {
-//       isFinished.value = true;
-//     }
-//     console.log(answerData);
-//   } catch (error) {
-//     console.error("Failed to submit answer:", error.response?.data || error);
-//     showSnackbar("error", "Failed to submit answer");
-//     startTimer(); // Restart timer if submission fails
-//   }
-// }
-
 function nextQuestion() {
   if (currentIndex.value < questions.value.length - 1) {
     clearInterval(interval);
     currentIndex.value++;
+    answerText.value = null;
     startTimer();
+  } else {
+    finishQuiz();
   }
 }
 
@@ -146,15 +76,11 @@ function prevQuestion() {
     startTimer();
   }
 }
+
+function finishQuiz() {
+  showSnackbar("green", "You've reached the end of questions");
+}
 let interval;
-onMounted(async () => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  pollEventUserId.value = user?.id;
-  await fetchAllQuestions();
-  // await fetchAnswersForQuestion();
-  // await fetchExistingAnswers();
-  startTimer();
-});
 
 onBeforeUnmount(() => clearInterval(interval));
 
@@ -194,57 +120,28 @@ async function fetchAllQuestions() {
 }
 
 async function submitAnswers() {
-  const data = {
-    answer: selectedAnswerText.value,
+  const answerPayLoad = {
     pollEventUserId: pollEventUserId.value,
     questionId: currentQuestion.value.id,
+    answer: answerText.value,
   };
-
-  console.log("Answer payload", data);
-
+  // console.log("Answer payload", answerPayLoad);
   try {
-    // Try to create a new answer
-    await UserAnswerServices.CreateUserAnswer(
-      pollEventUserId.value,
-      currentQuestion.value.id,
-      data
-    );
+    await UserAnswerServices.CreateUserAnswer(answerPayLoad);
   } catch (error) {
-    // If the answer already exists, update it instead
-    const status = error.response?.status;
-    if (status === 409 || status === 500) {
-      try {
-        await UserAnswerServices.UpdateUserAnswer(
-          pollEventUserId.value,
-          currentQuestion.value.id,
-          data
-        );
-      } catch (updateError) {
-        console.error(
-          "Update failed:",
-          updateError.response?.data || updateError.message
-        );
-        return;
-      }
-    } else {
-      console.error(
-        "Submission failed:",
-        error.response?.data || error.message
-      );
-      return;
-    }
+    console.log(error);
+    showSnackbar(
+      "error",
+      "This question has already been answered for this poll participation"
+    );
+    //return;
   }
-
-  // ✅ Clear selected answer for the next question
-  selectedAnswerText.value = "";
-
-  // ✅ Move to next question
   nextQuestion();
 }
 </script>
 
 <template>
-  <v-container>
+  <v-container style="min-width: 320px">
     <v-row>
       <v-col cols="12">
         <!-- Quiz in progress -->
@@ -271,33 +168,64 @@ async function submitAnswers() {
 
             <!-- Multiple Choice Question -->
             <v-radio-group
-              class="ml-6"
               v-if="currentQuestion.questionType === 'multiple_choice'"
-              v-model="selectedAnswerText"
+              v-model="answerText"
+              class="ml-6"
             >
-              <v-radio
-                v-for="answer in currentQuestion.answers"
-                :key="answer.id"
-                :label="answer.text"
-                :value="answer.text"
-              />
+              <div v-for="answer in currentQuestion.answers" :key="answer.id">
+                <v-card
+                  class="mb-2 answer-card"
+                  :class="{
+                    'answer-card--selected': answerText === answer.text,
+                  }"
+                  variant="tonal"
+                  @click="answerText = answer.text"
+                >
+                  <v-card-text class="py-3 text-center">
+                    {{ answer.text }}
+                  </v-card-text>
+                </v-card>
+              </div>
             </v-radio-group>
 
             <!-- True/False Question -->
-            <v-radio-group
-              class="ml-6"
+            <v-item-group
               v-else-if="currentQuestion.questionType === 'true_false'"
-              v-model="selectedAnswerText"
+              v-model="answerText"
+              class="ml-6"
             >
-              <v-radio label="True" :value="true" />
-              <v-radio label="False" :value="false" />
-            </v-radio-group>
+              <v-item value="true">
+                <template #default="{ isSelected, toggle }">
+                  <v-card
+                    class="mb-2 answer-card"
+                    :class="{ 'answer-card--selected': isSelected }"
+                    variant="tonal"
+                    @click="toggle"
+                  >
+                    <v-card-text class="py-3 text-center"> True </v-card-text>
+                  </v-card>
+                </template>
+              </v-item>
+
+              <v-item value="false">
+                <template #default="{ isSelected, toggle }">
+                  <v-card
+                    class="mb-2 answer-card"
+                    :class="{ 'answer-card--selected': isSelected }"
+                    variant="tonal"
+                    @click="toggle"
+                  >
+                    <v-card-text class="py-3 text-center"> False </v-card-text>
+                  </v-card>
+                </template>
+              </v-item>
+            </v-item-group>
 
             <!-- Short Answer Question -->
             <v-textarea
               class="ml-8"
               v-else-if="currentQuestion.questionType === 'short_answer'"
-              v-model="selectedAnswerText"
+              v-model="answerText"
               label="Enter Answer"
               rows="3"
             />
@@ -357,3 +285,14 @@ async function submitAnswers() {
     </v-snackbar>
   </v-container>
 </template>
+<style>
+.answer-card {
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.answer-card--selected {
+  background: #7b0d0d;
+  color: #fff;
+}
+</style>
