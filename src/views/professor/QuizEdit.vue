@@ -94,7 +94,7 @@ async function unlinkCourseFromPoll(pollId) {
   
   // Check if there are generated questions to add
   checkForGeneratedQuestions();
-});
+;
 
 //snackbar logic
 const snackbar = ref({
