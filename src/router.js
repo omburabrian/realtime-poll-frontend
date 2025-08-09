@@ -33,27 +33,13 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
-      path: "/admin/ai-quiz-builder",
-      name: "admin-ai-quiz-builder",
-      component: () => import("./views/admin/AiQuizBuilder.vue"),
-      meta: { requiresAuth: true, requiresAdmin: true },
-    },
-    {
-      //  ToDo:   Use this as the default landing page for all users?
-      //          Or at least student users?
-      path: "/polls/history",
-      name: "polls-history",
-      component: () => import("./views/PollsHistory.vue"),
-      //  meta: { requiresAuth: true, },
-    },
-    {
-      path: "/quiz-edit/:id",
+      path: "/quizEdit/:id",
       name: "quizEdit",
       component: () => import("./views/professor/QuizEdit.vue"),
     },
     {
-      path: "/admin/ai-quiz-builder",
-      name: "admin-ai-quiz-builder",
+      path: "/quizEdit/:quizId/ai-builder",
+      name: "ai-quiz-builder",
       component: () => import("./views/admin/AiQuizBuilder.vue"),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
@@ -80,19 +66,6 @@ const router = createRouter({
       name: "professor-preferences",
       component: () => import("./views/professor/Preferences.vue"),
       meta: { requiresAuth: true, requiresProfessor: true },
-    },
-    {
-      //  ToDo:   Use this as the default landing page for all users?
-      //          Or at least student users?
-      path: "/polls/history",
-      name: "polls-history",
-      component: () => import("./views/PollsHistory.vue"),
-      //  meta: { requiresAuth: true, },
-    },
-    {
-      path: "/quiz-edit/:id",
-      name: "quizEdit",
-      component: () => import("./views/professor/QuizEdit.vue"),
     },
     //ToDo:  Remove this POLL reference. This is a test view.
     {

@@ -47,20 +47,7 @@ function closeSnackbar() {
           </v-card-title>
         </v-col>
       </v-row>
-      <v-row class="mb-4">
-        <v-col cols="12">
-          <router-link to="/admin/ai-quiz-builder">
-            <v-btn color="deep-red darken-2" dark class="mb-2" block>
-              AI Quiz Builder
-            </v-btn>
-          </router-link>
-          <router-link to="/admin/ai-quiz-builder">
-            <v-btn color="primary" dark block>
-              Create AI Quiz
-            </v-btn>
-          </router-link>
-        </v-col>
-      </v-row>
+
 
       <v-row align="center" class="mb-4">
         <v-col cols="10">
@@ -75,12 +62,7 @@ function closeSnackbar() {
           <v-card class="elevation-3 pa-4">
             <v-card-title class="text-h5 mb-4">Quick Actions</v-card-title>
             <div class="d-flex flex-wrap gap-4">
-              <router-link to="/admin/ai-quiz-builder" style="text-decoration: none;">
-                <v-btn color="primary" variant="elevated" size="large">
-                  <v-icon icon="mdi-robot" start></v-icon>
-                  Create AI Quiz
-                </v-btn>
-              </router-link>
+              <!-- AI Quiz Builder is now only accessible through quiz editing -->
             </div>
           </v-card>
         </v-col>

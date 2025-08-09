@@ -495,7 +495,9 @@ async function dragToReorder() {
 
 // Navigate to AI Quiz Builder
 function goToAiQuizBuilder() {
-  router.push({ name: "admin-ai-quiz-builder" });
+  // Store the current quiz ID for the AI Builder to use
+  localStorage.setItem('currentQuizId', pollId)
+  router.push({ name: "ai-quiz-builder", params: { quizId: pollId } });
 }
 
 // Check for generated questions and add them to the quiz

@@ -2,10 +2,52 @@
   <v-container>
     <v-row>
       <v-col cols="12">
-        <v-card-title class="pl-0 text-h4 font-weight-bold">
-          Generate AI Questions
-        </v-card-title>
-        <p class="text-body-1 mt-2">Add AI-generated questions to your quiz</p>
+        <div class="d-flex align-center mb-4">
+          <v-btn
+            color="primary"
+            variant="outlined"
+            @click="goBackToQuiz"
+            class="mr-4"
+          >
+            <v-icon start>mdi-arrow-left</v-icon>
+            Back to Quiz
+          </v-btn>
+          <div>
+            <v-card-title class="pl-0 text-h4 font-weight-bold">
+              Generate AI Questions
+            </v-card-title>
+            <p class="text-body-1 mt-2">Add AI-generated questions to your quiz</p>
+          </div>
+        </div>
+      </v-col>
+      
+      <!-- Quiz Information Card -->
+      <v-col cols="12">
+        <v-card class="elevation-3 mb-4" color="primary" dark>
+          <v-card-text>
+            <div v-if="loadingQuiz" class="d-flex align-center">
+              <v-progress-circular indeterminate color="white" class="mr-3"></v-progress-circular>
+              <div>
+                <h3 class="text-h5 font-weight-bold">Loading quiz details...</h3>
+              </div>
+            </div>
+            <div v-else-if="currentQuiz" class="d-flex align-center">
+              <v-icon size="large" class="mr-3">mdi-book-open-variant</v-icon>
+              <div>
+                <h3 class="text-h5 font-weight-bold">{{ currentQuiz.name }}</h3>
+                <p class="text-body-1 mt-1" v-if="currentQuiz.description">{{ currentQuiz.description }}</p>
+                <p class="text-caption mt-1">Adding AI-generated questions to this quiz</p>
+              </div>
+            </div>
+            <div v-else class="d-flex align-center">
+              <v-icon size="large" class="mr-3" color="error">mdi-alert-circle</v-icon>
+              <div>
+                <h3 class="text-h5 font-weight-bold">Quiz not found</h3>
+                <p class="text-caption mt-1">Unable to load quiz details</p>
+              </div>
+            </div>
+          </v-card-text>
+        </v-card>
       </v-col>
       
       <!-- Simple AI Generation Form -->
@@ -127,11 +169,17 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
+import PollServices from '../../services/PollServices'
 
 const router = useRouter()
+const route = useRoute()
+
+// Current quiz information
+const currentQuiz = ref(null)
+const loadingQuiz = ref(false)
 
 // AI Generation form
 const aiForm = ref({
@@ -161,11 +209,49 @@ const canGenerate = computed(() => {
 })
 
 // Methods
+async function fetchQuizDetails() {
+  const quizId = route.params.quizId || localStorage.getItem('currentQuizId')
+  
+  if (!quizId) {
+    showSnackbar('No quiz ID found. Please navigate from a quiz edit page.', 'error')
+    router.push({ name: 'admin' })
+    return
+  }
+  
+  loadingQuiz.value = true
+  try {
+    const response = await PollServices.getPoll(quizId)
+    currentQuiz.value = response.data
+    console.log('Quiz details loaded:', currentQuiz.value)
+  } catch (error) {
+    console.error('Error fetching quiz details:', error)
+    showSnackbar('Failed to load quiz details', 'error')
+    router.push({ name: 'admin' })
+  } finally {
+    loadingQuiz.value = false
+  }
+}
+
 function showSnackbar(message, color = 'success') {
   snackbar.value = {
     show: true,
     message,
     color
+  }
+}
+
+// Load quiz details on component mount
+onMounted(() => {
+  fetchQuizDetails()
+})
+
+// Navigate back to quiz edit page
+function goBackToQuiz() {
+  const quizId = route.params.quizId || localStorage.getItem('currentQuizId')
+  if (quizId) {
+    router.push({ name: 'quizEdit', params: { id: quizId } })
+  } else {
+    router.push({ name: 'admin' })
   }
 }
 
@@ -417,20 +503,13 @@ async function addQuestionsToQuiz() {
     
     showSnackbar('Questions ready to add to quiz!')
     
-    // Navigate back to QuizEdit - try multiple navigation methods
+    // Navigate back to QuizEdit using the current quiz ID
+    const quizId = route.params.quizId || localStorage.getItem('currentQuizId')
     setTimeout(() => {
-      try {
-        // Try to go back to previous page
-        if (window.history.length > 1) {
-          router.go(-1)
-        } else {
-          // Fallback to QuizEdit route
-          router.push({ name: 'quizEdit', params: { id: 'new' } })
-        }
-      } catch (navError) {
-        console.error('Navigation error:', navError)
-        // Final fallback
-        window.location.href = '/admin'
+      if (quizId) {
+        router.push({ name: 'quizEdit', params: { id: quizId } })
+      } else {
+        router.push({ name: 'admin' })
       }
     }, 1000)
     

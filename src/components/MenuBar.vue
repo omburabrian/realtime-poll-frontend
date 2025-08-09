@@ -16,7 +16,6 @@ const adminMenuItems = ref([
   { title: "Users", name: "admin-users" },
   { title: "Database", name: "admin-database" },
   { title: "Settings", name: "admin-settings" },
-  { title: "AI Quiz Builder", name: "admin-ai-quiz-builder" },
 ]);
 
 const professorMenuItems = ref([
