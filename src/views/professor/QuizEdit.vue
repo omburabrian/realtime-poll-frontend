@@ -696,6 +696,8 @@ async function checkForGeneratedQuestions() {
                       ? "True/False"
                       : item.questionType === "short_answer"
                       ? "Short Answer"
+                      : item.questionType === "open_ended"
+                      ? "Open Ended"
                       : item.questionType
                   }}
                 </td>
@@ -777,6 +779,7 @@ async function checkForGeneratedQuestions() {
                     { text: 'Multiple Choice', value: 'multiple_choice' },
                     { text: 'True/False', value: 'true_false' },
                     { text: 'Short Answer', value: 'short_answer' },
+                    { text: 'Open Ended', value: 'open_ended' },
                   ]"
                   item-title="text"
                   item-value="value"

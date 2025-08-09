@@ -2,7 +2,7 @@ import axios from "axios";
 
 var baseurl = "";
 if (process.env.NODE_ENV === "development") {
-  baseurl = "http://localhost:3201/realtime-pollapi/";
+  baseurl = "http://localhost/realtime-pollapi/";
 } else {
   baseurl = "/realtime-pollapi/";
 }
