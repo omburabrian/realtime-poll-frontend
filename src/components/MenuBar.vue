@@ -129,9 +129,6 @@ function isProfessor() {
           <v-btn class="mx-2" v-bind="props">
             Professor <v-icon end>mdi-menu-down</v-icon>
           </v-btn>
-          <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'takeQuiz' }">
-            Take Quiz
-          </v-btn>
         </template>
         <v-list>
           <v-list-item
@@ -163,6 +160,16 @@ function isProfessor() {
 
       <v-menu v-if="user !== null" min-width="200px" rounded>
         <template v-slot:activator="{ props }">
+          <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'takeQuiz' }">
+            Take Quiz
+          </v-btn>
+          <v-btn
+            v-if="user !== null"
+            class="mx-2"
+            :to="{ name: 'polls-history' }"
+          >
+            History
+          </v-btn>
           <v-btn icon v-bind="props">
             <v-avatar class="mx-auto text-center" color="accent" size="large">
               <span class="white--text font-weight-bold">{{

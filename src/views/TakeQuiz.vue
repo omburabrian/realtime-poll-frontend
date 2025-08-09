@@ -4,25 +4,19 @@ import QuestionServices from "../services/QuestionServices";
 import UserAnswerServices from "../services/UserAnswerServices";
 import QuizProgress from "../components/QuizTimerComponent.vue";
 
-const duration = 10;
+const duration = 30;
 const remaining = ref(duration);
 const currentIndex = ref(0);
-
-const quizTitle = "American History";
-
 const questions = ref([]);
-// const answers = ref([]);
-const userAnswers = ref([]); // Stores all user answers
-const pollId = 17;
+const pollId = 5;
 
 const user = ref(null);
 const pollEventUserId = ref(null);
+const pollEvent = ref({});
 
-// //const selectedAnswerId = ref({});
 const answerText = ref("");
 const isFinished = ref(false);
 
-// // Computed properties
 const currentQuestion = computed(() => questions.value[currentIndex.value]);
 const progress = computed(
   () => ((duration - remaining.value) / duration) * 100
@@ -41,10 +35,10 @@ onMounted(async () => {
   user.value = JSON.parse(localStorage.getItem("user"));
   pollEventUserId.value = user.value.id;
   await fetchAllQuestions();
-  // await fetchAnswersForQuestion();
-  // await fetchExistingAnswers();
   startTimer();
 });
+
+onBeforeUnmount(() => clearInterval(interval));
 
 function startTimer() {
   remaining.value = duration;
@@ -79,12 +73,10 @@ function prevQuestion() {
 
 function finishQuiz() {
   showSnackbar("green", "You've reached the end of questions");
+  //route to results page
 }
 let interval;
 
-onBeforeUnmount(() => clearInterval(interval));
-
-// Snackbar functionality
 const snackbar = ref({
   value: false,
   color: "",
@@ -103,20 +95,18 @@ function closeSnackBar() {
   snackbar.value.value = false;
 }
 
-// fetch questions from backend
-
 async function fetchAllQuestions() {
-  try {
-    const response = await QuestionServices.getQuestionsForPoll(pollId);
-    questions.value = response.data.map((q) => ({
-      ...q,
-      answers: q.answers || [],
-    }));
-    console.log("Fetched questions:", questions.value);
-  } catch (error) {
-    console.error("Failed to fetch questions:", error);
-    showSnackbar("error", "Failed to fetch questions");
-  }
+  await QuestionServices.getQuestionsForPoll(pollId)
+    .then((response) => {
+      questions.value = (response.data || []).map((q) => ({
+        ...q,
+        answers: q.answers || [],
+      }));
+    })
+    .catch((error) => {
+      console.error(error);
+      showSnackbar("error", "Failed to fetch questions");
+    });
 }
 
 async function submitAnswers() {
@@ -125,16 +115,12 @@ async function submitAnswers() {
     questionId: currentQuestion.value.id,
     answer: answerText.value,
   };
-  // console.log("Answer payload", answerPayLoad);
   try {
     await UserAnswerServices.CreateUserAnswer(answerPayLoad);
+    showSnackbar("green", "Answer submitted");
   } catch (error) {
     console.log(error);
-    showSnackbar(
-      "error",
-      "This question has already been answered for this poll participation"
-    );
-    //return;
+    showSnackbar("error", "Error submitting answer");
   }
   nextQuestion();
 }
@@ -152,7 +138,7 @@ async function submitAnswers() {
         >
           <v-card color="primary" class="rounded-lg mb-5 elevation-5">
             <v-card-title class="d-flex px-5 py-5 justify-space-between">
-              <span>Quiz Title: {{ quizTitle }}</span>
+              <span>Quiz Title: {{ pollEvent.name }}</span>
               <span>Questions: {{ questions.length }}</span>
             </v-card-title>
           </v-card>
@@ -249,29 +235,11 @@ async function submitAnswers() {
             <v-btn
               @click="nextQuestion"
               color="primary"
-              :disabled="!isAnswerSelected"
+              :disabled="!isAnswerSelected && !isLastQuestion"
             >
               {{ isLastQuestion ? "Finish" : "Next" }}
             </v-btn>
-            <!-- <v-btn @click="submitAnswers">Send</v-btn> -->
           </v-card-actions>
-        </v-card>
-
-        <!-- Quiz completed -->
-        <v-card v-else-if="isFinished" class="mt-15" elevation="10">
-          <v-card-title class="text-h5 text-center font-weight-bold">
-            Quiz Completed
-          </v-card-title>
-          <v-card-text class="text-h6 text-center">
-            Thank you for participating!
-          </v-card-text>
-        </v-card>
-
-        <!-- Loading state -->
-        <v-card v-else class="mt-15" elevation="10">
-          <v-card-text class="text-h6 text-center py-10">
-            Loading questions...
-          </v-card-text>
         </v-card>
       </v-col>
     </v-row>
