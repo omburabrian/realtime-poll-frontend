@@ -9,14 +9,20 @@ import { useSnackbar } from "../../composables/useSnackbar.js";
 const user = ref(null);   //  Current logged in user
 const users = ref([]);    //  List of users
 const userRoles = ref([]);    //  List of user user roles
-const { snackbar, showSnackbar, closeSnackBar } = useSnackbar();
+
+//  Snackbar composable
+const { snackbar, showSnackbar, showErrorSnackbar, closeSnackbar } = useSnackbar();
 
 //----------------------------------------------------------------
 onMounted(async () => {
-  await getUsers();
-  await getUserRoles();
   user.value = JSON.parse(localStorage.getItem("user"));
   //  console.log(user.value);
+
+    //  Must be authenticated user to get user roles.
+  if (user.value !== null) {
+    await getUserRoles();
+    await getUsers();
+  }
 });
 
 //----------------------------------------------------------------
@@ -129,7 +135,7 @@ async function handleDeleteUser(userId) {
           <v-btn
             :color="snackbar.color"
             variant="text"
-            @click="closeSnackBar()"
+            @click="closeSnackbar()"
           >
             Close
           </v-btn>

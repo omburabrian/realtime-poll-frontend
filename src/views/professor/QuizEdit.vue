@@ -5,6 +5,11 @@ import draggable from "vuedraggable";
 import PollServices from "../../services/PollServices";
 import QuestionServices from "../../services/QuestionServices";
 import AnswerServices from "../../services/AnswerServices";
+import CourseServices from "../../services/CourseServices.js";
+import CoursePollServices from "../../services/CoursePollServices.js";
+
+const courses = ref([]);
+const selectedCourseId = ref(null);
 
 const route = useRoute();
 const pollId = route.params.id;
@@ -27,7 +32,64 @@ onMounted(async () => {
   await getPoll();
   await getQuestions();
   await getAnswers();
+  await getCourses();
+
+  const linkedCourses = await getPollCourses();
+  if (linkedCourses.length > 0) {
+    selectedCourseId.value = linkedCourses[0].id;
+  }
+
 });
+
+async function getCourses() {
+  try {
+    const response = await CourseServices.getCourses();
+    courses.value = [{ id: null, title: "None" }, ...response.data];
+  } catch (error) {
+    console.error("Failed to load courses:", error);
+    showSnackbar("error", "Failed to load courses");
+  }
+}
+
+async function getPollCourses() {
+  try {
+    const response = await CoursePollServices.getCoursesByPollId(pollId);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch courses for poll:", error);
+    showSnackbar("error", "Failed to fetch courses for poll");
+    return [];
+  }
+}
+
+async function linkCourseToPoll(pollId, courseId) {
+  try {
+    
+    await CoursePollServices.createCoursePollLink(pollId, courseId);
+    snackbar.value.value = true;
+    snackbar.value.color = "green";
+    snackbar.value.text = "Course linked successfully!";
+  } catch (error) {
+    console.log(error);
+    snackbar.value.value = true;
+    snackbar.value.color = "error";
+    snackbar.value.text = error.response?.data?.message || "Failed to link course.";
+  }
+}
+
+async function unlinkCourseFromPoll(pollId) {
+  try {
+    await CoursePollServices.deleteAllLinksForPoll(pollId);
+    snackbar.value.value = true;
+    snackbar.value.color = "green";
+    snackbar.value.text = "Course unlinked successfully!";
+  } catch (error) {
+    console.log(error);
+    snackbar.value.value = true;
+    snackbar.value.color = "error";
+    snackbar.value.text = error.response?.data?.message || "Failed to unlink course.";
+  }
+}
 
 //snackbar logic
 const snackbar = ref({
@@ -45,7 +107,7 @@ function showSnackbar(color, text) {
   };
 }
 //close the snackbar
-function closeSnackBar() {
+function closeSnackbar() {
   snackbar.value.value = false;
 }
 
@@ -97,9 +159,17 @@ async function updateQuiz() {
     return;
   }
   try {
-    await PollServices.updatePoll(poll.value.id, poll.value).then(() => {
-      showSnackbar("green", `Poll ID ${poll.value.id} updated successfully!`);
-    });
+    await PollServices.updatePoll(poll.value.id, poll.value);
+
+    // Always remove all previous course links first
+    await unlinkCourseFromPoll(poll.value.id);
+
+    // Then optionally add new one if selected
+    if (selectedCourseId.value) {
+      await linkCourseToPoll(poll.value.id, selectedCourseId.value);
+    }
+
+    showSnackbar("green", `Poll ID ${poll.value.id} updated successfully!`);
   } catch (error) {
     console.log(error);
     showSnackbar("error", "Failed to update poll");
@@ -306,10 +376,10 @@ async function saveAnswers(question) {
         id: answer.id,
         ...answerData,
       });
-      console.log("Answer updated:", answerData);
+      //  console.log("Answer updated:", answerData);
     } else {
       await AnswerServices.createAnswer(question.id, answerData);
-      console.log("Answer created:", answerData);
+      //  console.log("Answer created:", answerData);
     }
   }
 }
@@ -435,14 +505,44 @@ async function dragToReorder() {
       </v-col>
       <v-col cols="12" v-if="showQuizInfo">
         <v-card class="elevation-3">
-          <v-card-text>
-            <v-text-field label="Quiz Name" v-model="poll.name"></v-text-field>
-            <v-textarea
-              label="Description"
-              v-model="poll.description"
-              rows="3"
-            ></v-textarea>
-          </v-card-text>
+          
+         <v-card-text>
+
+              <v-text-field label="Quiz Name" v-model="poll.name" />
+
+              <v-textarea
+                label="Description"
+                v-model="poll.description"
+                rows="3"
+              />
+
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="selectedCourseId"
+                    :items="courses"
+                    item-title="title"
+                    item-value="id"
+                    label="Course"
+                    clearable
+                    hint="Select a course for this quiz"
+                    persistent-hint
+                  />
+                </v-col>
+
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model.number="poll.secondsPerQuestion"
+                    type="number"
+                    min="0"
+                    label="Time Per Question (seconds)"
+                    hint="Leave blank or set to 0 for unlimited"
+                    persistent-hint
+                  />
+                </v-col>
+              </v-row>
+            </v-card-text>
+
           <v-card-actions class="d-flex justify-space-between mb-2">
             <v-btn
               color="primary"
@@ -761,7 +861,7 @@ async function dragToReorder() {
       {{ snackbar.text }}
 
       <template v-slot:actions>
-        <v-btn :color="snackbar.color" variant="text" @click="closeSnackBar()">
+        <v-btn :color="snackbar.color" variant="text" @click="closeSnackbar()">
           Close
         </v-btn>
       </template>

@@ -22,12 +22,17 @@ const professorMenuItems = ref([
   { title: "Professor Dashboard", name: "professor" },
   { title: "Professor Polls", name: "professor-polls" },
   { title: "Professor Preferences", name: "professor-preferences" },
+  { title: "Manage Courses", name: "professor-courses" },
 ]);
 
 onMounted(async () => {
-  await getUserRoles();
   logoURL.value = ocLogo;
   user.value = JSON.parse(localStorage.getItem("user"));
+
+  //  Must be authenticated user to get user roles.
+  if (user.value !== null) {
+    await getUserRoles();
+  }
 });
 
 function logout() {
@@ -55,7 +60,10 @@ async function getUserRoles() {
       //  console.log(userRoles.value.PROFESSOR);
     })
     .catch((error) => {
-      console.log(error);
+      let defaultMessage = "Unknown error while getting user roles";
+      const message =
+        error?.response?.data?.message || error?.message || defaultMessage;
+      //  console.log(message);
     });
 }
 
@@ -152,10 +160,6 @@ function isProfessor() {
           </v-list-item>
         </v-list>
       </v-menu>
-
-      <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'poll' }">
-        Poll Test
-      </v-btn>
 
       <v-menu v-if="user !== null" min-width="200px" rounded>
         <template v-slot:activator="{ props }">
