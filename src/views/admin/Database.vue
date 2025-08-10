@@ -18,11 +18,11 @@ onMounted(async () => {
 async function loadTestData_users() {
   await AdminServices.loadTestData_users()
     .then((response) => {
-      console.log(response);
+      //  console.log(response);
       showSnackbar(response?.data?.message || "Test data loaded successfully for USERS");
     })
     .catch((error) => {
-      //  console.log(error);
+      console.log(error);
       showErrorSnackbar(error, "Error loading test data for USERS");
     });
 }
@@ -31,7 +31,7 @@ async function loadTestData_polls() {
 
   await AdminServices.loadTestData_polls()
     .then((response) => {
-      console.log(response);
+      //  console.log(response);
       showSnackbar(response?.data?.message || "Test data loaded successfully for POLLS");
     })
     .catch((error) => {
