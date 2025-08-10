@@ -71,23 +71,24 @@ async function loadTestData_courses() {
           <v-card class="rounded-lg elevation-5">
             <v-card-title class="headline mb-2">Test Data </v-card-title>
             <v-card-text>
+              <div class="d-flex align-center mb-5">
+                <v-btn variant="flat" color="primary" @click="loadTestData_users()">
+                  Load Users
+                </v-btn>
+              </div>
 
-              <v-btn variant="flat" color="primary" class="mb-5" @click="loadTestData_users()">
-                Load Users
-              </v-btn>
+              <div class="d-flex align-center mb-5">
+                <v-btn variant="flat" color="primary" class="mr-4" @click="loadTestData_polls()">
+                  Load Polls
+                </v-btn>
+                <span class="text-body-2 text-grey-darken-1">(Loads discussion Polls and Quizzes, AND corresponding Poll Events)</span>
+              </div>
 
-              <v-spacer></v-spacer>
-
-              <v-btn variant="flat" color="primary" class="mb-5" @click="loadTestData_polls()">
-                Load Polls (Discussion Polls and Quizzes)
-              </v-btn>
-
-              <v-spacer></v-spacer>
-
-              <v-btn variant="flat" color="primary" class="mb-5" @click="loadTestData_courses()">
-                Load Courses
-              </v-btn>
-
+              <div class="d-flex align-center">
+                <v-btn variant="flat" color="primary" @click="loadTestData_courses()">
+                  Load Courses
+                </v-btn>
+              </div>
             </v-card-text>
           </v-card>
         </v-col>
