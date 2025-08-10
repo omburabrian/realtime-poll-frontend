@@ -31,9 +31,12 @@ const { snackbar, showSnackbar, showErrorSnackbar, closeSnackbar } = useSnackbar
 
 onMounted(async () => {
   localStorage.removeItem("user");
-  // if (localStorage.getItem("user") !== null) {
-  //   router.push({ name: "recipes" });
-  // }
+
+  //  ToDo:  Why is this check here?  The user was just now "removed".
+  //  Navigate to a safe page with no sensitive data.  (Change later?)
+  if (localStorage.getItem("user") !== null) {
+    router.push({ name: "polls-history" });
+  }
 });
 
 function navigateToPollsHistory() {
