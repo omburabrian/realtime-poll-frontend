@@ -1,24 +1,14 @@
+import { id } from "vuetify/locale";
 import apiClient from "./services";
 export default {
   // Create User Answer
   CreateUserAnswer(answer) {
     return apiClient.post("user-answers/", answer);
   },
-  UpdateUserAnswer(pollEventUserId, questionId, data) {
-    return apiClient.put(
-      "/user-answers/poll-event-user/" +
-        pollEventUserId +
-        "/question/" +
-        questionId,
-      data
-    );
+  UpdateUserAnswer(id) {
+    return apiClient.put("/user-answers/" + id);
   },
-  getUserAnswers(pollEventUserId, questionId) {
-    return apiClient(
-      "/user-answers/poll-event-user/" +
-        pollEventUserId +
-        "/question/" +
-        questionId
-    );
+  GetUserAnswersForPoll(pollEventUserId) {
+    return apiClient("/user-answers/poll-event-user/" + pollEventUserId);
   },
 };
