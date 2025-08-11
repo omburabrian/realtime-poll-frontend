@@ -6,9 +6,13 @@ export function useSocketIO() {
   if (!socketInstance) {
     const user = JSON.parse(localStorage.getItem("user"));
 
-    // Connect to the Node.js/Socket.IO server
-    // The URL must point to your new backend.
-    socketInstance = io("http://localhost:3001", { // Make sure this matches your backend port
+    //  ToDo:  Am I not using the same port for both the backend REST API and messaging?
+    //  Connect to the Node.js/Socket.IO server
+    //  The URL must point to your new backend.
+
+    //  Make sure this matches the backend port
+    //  socketInstance = io("http://localhost:3001", {
+    socketInstance = io("http://localhost:3201", {
       // Send auth token with the connection request
       auth: {
         token: user?.token,
