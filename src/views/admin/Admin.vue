@@ -41,18 +41,30 @@ function closeSnackbar() {
     <div id="body">
       
       <v-row align="center" class="mb-4">
-        <v-col cols="10"
-          ><v-card-title class="pl-0 text-h4 font-weight-bold"
-            >Admin Dashboard
+        <v-col cols="10">
+          <v-card-title class="pl-0 text-h4 font-weight-bold">
+            Admin Dashboard
           </v-card-title>
         </v-col>
       </v-row>
+
 
       <v-row align="center" class="mb-4">
         <v-col cols="10">
           <pre>
 {{ dashboardData }}
           </pre>
+        </v-col>
+      </v-row>
+
+      <v-row align="center" class="mb-4">
+        <v-col cols="10">
+          <v-card class="elevation-3 pa-4">
+            <v-card-title class="text-h5 mb-4">Quick Actions</v-card-title>
+            <div class="d-flex flex-wrap gap-4">
+              <!-- AI Quiz Builder is now only accessible through quiz editing -->
+            </div>
+          </v-card>
         </v-col>
       </v-row>
 

@@ -10,11 +10,19 @@ export default {
     return apiClient.post("admin/load-test-data/users");
   },
 
-  loadTestData_pollsQuestionsAnswers() {
+  loadTestData_polls() {
     return apiClient.post("/admin/load-test-data/polls");
   },
 
-    loadTestData_courses() {
+  loadTestData_quizzesAndAnswers() {
+    return apiClient.post("/admin/load-test-data/quizzes");
+  },
+
+  loadTestData_discussionPolls() {
+    return apiClient.post("/admin/load-test-data/discussion-polls");
+  },
+    
+  loadTestData_courses() {
     return apiClient.post("/admin/load-test-data/courses");
   },
 

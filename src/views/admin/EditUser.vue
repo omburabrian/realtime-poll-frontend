@@ -5,8 +5,6 @@ import { useRoute } from "vue-router";
 
 const route = useRoute();
 
-const recipe = ref({});
-
 const snackbar = ref({
   value: false,
   color: "",
