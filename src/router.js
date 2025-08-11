@@ -33,6 +33,17 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
+      path: "/quizEdit/:id",
+      name: "quizEdit",
+      component: () => import("./views/professor/QuizEdit.vue"),
+    },
+    {
+      path: "/quizEdit/:quizId/ai-builder",
+      name: "ai-quiz-builder",
+      component: () => import("./views/admin/AiQuizBuilder.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
       path: "/professor",
       name: "professor",
       component: () => import("./views/professor/Professor.vue"),
@@ -64,36 +75,12 @@ const router = createRouter({
       component: () => import("./views/PollsHistory.vue"),
       //  meta: { requiresAuth: true, },
     },
-    {
-      path: "/quiz-edit/:id",
-      name: "quizEdit",
-      component: () => import("./views/professor/QuizEdit.vue"),
-    },
     //ToDo:  Remove this POLL reference. This is a test view.
     {
       path: "/poll",
       name: "poll",
       component: () => import("./views/professor/Poll.vue"),
     },
-    //  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-    //  ToDo:  Remove RECIPE references
-    {
-      path: "/recipes",
-      name: "recipes",
-      component: () => import("./views/RecipeList.vue"),
-    },
-    {
-      path: "/recipe/:id",
-      name: "editRecipe",
-      props: true,
-      component: () => import("./views/EditRecipe.vue"),
-    },
-    {
-      path: "/ingredients",
-      name: "ingredients",
-      component: () => import("./views/IngredientList.vue"),
-    },
-    //  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   ],
 });
 
@@ -110,14 +97,14 @@ router.beforeEach((to, from, next) => {
       next(); //  User is an admin, allow access
     } else {
       //  Not an admin or not logged in, redirect to a safe page
-      next({ name: "recipes" });
+      next({ name: "polls-history" });
     }
   } else if (to.meta.requiresProfessor) {
     if (user  &&  ((user.role === "professor") || (user.role === "admin"))) {
       next();   //  User is a professor or admin -- Allow access
     } else {
       //  Not an admin or not logged in, redirect to a safe page
-      next({ name: "recipes" });
+      next({ name: "polls-history" });
     }
   } else if (to.meta.requiresAuth  &&  !user) {
     //  If route requires login and user is not logged in, redirect to login

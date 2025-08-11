@@ -9,9 +9,7 @@ const user = ref(null);
 const { snackbar, showSnackbar, showErrorSnackbar, closeSnackbar } = useSnackbar();
 
 onMounted(async () => {
-  //  await getRecipes();
   user.value = JSON.parse(localStorage.getItem("user"));
-  //  console.log(user.value);
 });
 </script>
 
