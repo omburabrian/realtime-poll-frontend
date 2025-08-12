@@ -7,7 +7,7 @@ import UserServices from "../services/UserServices";
 const router = useRouter();
 
 const user = ref(null);
-const userRoles = ref([]);    //  List of user user roles
+const userRoles = ref([]); //  List of user user roles
 const title = ref("Real-time Poll");
 const logoURL = ref("");
 
@@ -52,32 +52,35 @@ function logout() {
 //  ToDo:  Put this in a reusable utility service.
 //  Get user user roles.
 async function getUserRoles() {
-    await UserServices.getUserRoles()
-        .then((response) => {
-            //  ROLES are defined as an array of constants.
-            userRoles.value = response.data;
-            //  console.log('userRoles.value.PROFESSOR');
-            //  console.log(userRoles.value.PROFESSOR);
-        })
-        .catch((error) => {
-          let defaultMessage = 'Unknown error while getting user roles';
-          const message = error?.response?.data?.message || error?.message || defaultMessage;
-          //  console.log(message);
-        });
+  await UserServices.getUserRoles()
+    .then((response) => {
+      //  ROLES are defined as an array of constants.
+      userRoles.value = response.data;
+      //  console.log('userRoles.value.PROFESSOR');
+      //  console.log(userRoles.value.PROFESSOR);
+    })
+    .catch((error) => {
+      let defaultMessage = "Unknown error while getting user roles";
+      const message =
+        error?.response?.data?.message || error?.message || defaultMessage;
+      //  console.log(message);
+    });
 }
 
 function isProfessorOrAdmin() {
-  return user.value &&
-    ( user.value.role === userRoles.value.PROFESSOR
-      || user.value.role === userRoles.value.ADMIN);
+  return (
+    user.value &&
+    (user.value.role === userRoles.value.PROFESSOR ||
+      user.value.role === userRoles.value.ADMIN)
+  );
 }
 
 function isAdmin() {
-  return user.value && (user.value.role === userRoles.value.ADMIN);
+  return user.value && user.value.role === userRoles.value.ADMIN;
 }
 
 function isProfessor() {
-  return user.value && (user.value.role === userRoles.value.PROFESSOR);
+  return user.value && user.value.role === userRoles.value.PROFESSOR;
 }
 
 //-----------------------------------------------------------------------
@@ -104,14 +107,22 @@ function isProfessor() {
         Login
       </v-btn>
 
-      <v-menu v-if="user !== null && isProfessorOrAdmin()" location="bottom" rounded>
+      <v-menu
+        v-if="user !== null && isProfessorOrAdmin()"
+        location="bottom"
+        rounded
+      >
         <template v-slot:activator="{ props }">
           <v-btn class="mx-2" v-bind="props">
             Professor <v-icon end>mdi-menu-down</v-icon>
           </v-btn>
         </template>
         <v-list>
-          <v-list-item v-for="(item, index) in professorMenuItems" :key="index" :to="{ name: item.name }">
+          <v-list-item
+            v-for="(item, index) in professorMenuItems"
+            :key="index"
+            :to="{ name: item.name }"
+          >
             <v-list-item-title>{{ item.title }}</v-list-item-title>
           </v-list-item>
         </v-list>
@@ -136,6 +147,16 @@ function isProfessor() {
 
       <v-menu v-if="user !== null" min-width="200px" rounded>
         <template v-slot:activator="{ props }">
+          <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'liveQuiz' }">
+            Take Quiz
+          </v-btn>
+          <v-btn
+            v-if="user !== null"
+            class="mx-2"
+            :to="{ name: 'polls-history' }"
+          >
+            Poll History
+          </v-btn>
           <v-btn icon v-bind="props">
             <v-avatar class="mx-auto text-center" color="accent" size="large">
               <span class="white--text font-weight-bold">{{

@@ -55,7 +55,7 @@ const router = createRouter({
       component: () => import("./views/professor/PollList.vue"),
       meta: { requiresAuth: true, requiresProfessor: true },
     },
-     {
+    {
       path: "/professor/courses",
       name: "professor-courses",
       component: () => import("./views/professor/CourseList.vue"),
@@ -75,11 +75,29 @@ const router = createRouter({
       component: () => import("./views/PollsHistory.vue"),
       //  meta: { requiresAuth: true, },
     },
+    {
+      path: "/quiz-edit/:id",
+      name: "quizEdit",
+      component: () => import("./views/professor/QuizEdit.vue"),
+    },
+    {
+      path: "/liveQuiz",
+      name: "liveQuiz",
+      component: () => import("./views/LiveQuiz.vue"),
+    },
+
     //ToDo:  Remove this POLL reference. This is a test view.
     {
       path: "/poll",
       name: "poll",
       component: () => import("./views/professor/Poll.vue"),
+    },
+    {
+      path: "/chat/:pollEventGuid",
+      name: "chat",
+      component: () => import("./components/RealtimeChat.vue"),
+      props: true,
+      meta: { requiresAuth: true },
     },
   ],
 });
@@ -100,13 +118,13 @@ router.beforeEach((to, from, next) => {
       next({ name: "polls-history" });
     }
   } else if (to.meta.requiresProfessor) {
-    if (user  &&  ((user.role === "professor") || (user.role === "admin"))) {
-      next();   //  User is a professor or admin -- Allow access
+    if (user && (user.role === "professor" || user.role === "admin")) {
+      next(); //  User is a professor or admin -- Allow access
     } else {
       //  Not an admin or not logged in, redirect to a safe page
       next({ name: "polls-history" });
     }
-  } else if (to.meta.requiresAuth  &&  !user) {
+  } else if (to.meta.requiresAuth && !user) {
     //  If route requires login and user is not logged in, redirect to login
     next({ name: "login" });
   } else {
