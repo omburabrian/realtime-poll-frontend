@@ -42,35 +42,83 @@ const router = createRouter({
     {
       path: "/quizEdit/:id",
       name: "quizEdit",
-      component: () => import("./views/admin/QuizEdit.vue"),
+      component: () => import("./views/professor/QuizEdit.vue"),
+    },
+    {
+      path: "/quizEdit/:quizId/ai-builder",
+      name: "ai-quiz-builder",
+      component: () => import("./views/admin/AiQuizBuilder.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: "/professor",
+      name: "professor",
+      component: () => import("./views/professor/Professor.vue"),
+      meta: { requiresAuth: true, requiresProfessor: true },
+    },
+    {
+      path: "/professor/polls",
+      name: "professor-polls",
+      component: () => import("./views/professor/PollList.vue"),
+      meta: { requiresAuth: true, requiresProfessor: true },
+    },
+    {
+      path: "/professor/courses",
+      name: "professor-courses",
+      component: () => import("./views/professor/CourseList.vue"),
+      meta: { requiresAuth: true, requiresProfessor: true },
+    },
+    {
+      path: "/professor/preferences",
+      name: "professor-preferences",
+      component: () => import("./views/professor/Preferences.vue"),
+      meta: { requiresAuth: true, requiresProfessor: true },
+    },
+    {
+      //  ToDo:   Use this as the default landing page for all users?
+      //          Or at least student users?
+      path: "/polls/history",
+      name: "polls-history",
+      component: () => import("./views/PollsHistory.vue"),
+      //  meta: { requiresAuth: true, },
+    },
+    {
+        path: "/quizCode",
+      name: "quiz-code",
+      component: () => import("./views/QuizCodeEntry.vue"),
+      meta: { requiresAuth: false, requiresProfessor: false },
+    },
+    {
+      path: "/liveQuiz/student/:id",
+      name: "student-quiz",
+      component: () => import("./views/StudentLiveQuiz.vue"),
+    },
+    {
+      path: "/quiz-edit/:id",
+      name: "quizEdit",
+      component: () => import("./views/professor/QuizEdit.vue"),
     },
 
     //ToDo:  Remove this POLL reference. This is a test view.
     {
       path: "/poll",
       name: "poll",
-      component: () => import("./views/admin/Poll.vue"),
-    },
-    //  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-    //  ToDo:  Remove RECIPE references
-    {
-      path: "/recipes",
-      name: "recipes",
-      component: () => import("./views/RecipeList.vue"),
+      component: () => import("./views/professor/Poll.vue"),
     },
     {
-      path: "/recipe/:id",
-      name: "editRecipe",
+      path: "/chat/:pollEventGuid",
+      name: "chat",
+      component: () => import("./components/RealtimeChat.vue"),
       props: true,
-      component: () => import("./views/EditRecipe.vue"),
+      meta: { requiresAuth: true },
     },
     {
-      path: "/ingredients",
-      name: "ingredients",
-      component: () => import("./views/IngredientList.vue"),
+      path: "/liveQuiz/professor/:id",
+      name: "professor-quiz",
+      component: () => import("./views/professor/LiveView.vue"),
     },
-    //  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   ],
+  
 });
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -86,7 +134,14 @@ router.beforeEach((to, from, next) => {
       next(); //  User is an admin, allow access
     } else {
       //  Not an admin or not logged in, redirect to a safe page
-      next({ name: "recipes" });
+      next({ name: "polls-history" });
+    }
+  } else if (to.meta.requiresProfessor) {
+    if (user && (user.role === "professor" || user.role === "admin")) {
+      next(); //  User is a professor or admin -- Allow access
+    } else {
+      //  Not an admin or not logged in, redirect to a safe page
+      next({ name: "polls-history" });
     }
   } else if (to.meta.requiresAuth && !user) {
     //  If route requires login and user is not logged in, redirect to login

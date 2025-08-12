@@ -1,17 +1,22 @@
 import apiClient from "./services";
 
 export default {
-  //get all polls for the user
-  getPolls(userId) {
-    return apiClient.get("users/" + userId + "/polls");
+  getPolls() {
+    return apiClient.get("polls/");
   },
-  //get poll by ID
+  getPollsByUserId(userId) {
+    return apiClient.get("users/" + userId +"/polls/");
+  },
   getPoll(id) {
     return apiClient.get("polls/" + id);
   },
-  //update poll
-  updatePoll(id, data) {
-    return apiClient.put("polls/" + id, data);
+  addPoll(poll) {
+    return apiClient.post("polls", poll);
   },
-  //delete poll
+  updatePoll(pollId, poll) {
+    return apiClient.put("polls/" + pollId, poll);
+  },
+  deletePoll(pollId) {
+    return apiClient.delete("polls/" + pollId);
+  },
 };

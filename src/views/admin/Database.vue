@@ -4,13 +4,12 @@ import AdminServices from "../../services/AdminServices.js";
 
 import { onMounted } from "vue";
 import { ref } from "vue";
+import { useSnackbar } from "../../composables/useSnackbar.js";
 
 const user = ref(null);
-const snackbar = ref({
-  value: false,
-  color: "",
-  text: "",
-});
+
+//  Snackbar composable
+const { snackbar, showSnackbar, showErrorSnackbar, closeSnackbar } = useSnackbar();
 
 onMounted(async () => {
   user.value = JSON.parse(localStorage.getItem("user"));
@@ -19,39 +18,41 @@ onMounted(async () => {
 async function loadTestData_users() {
   await AdminServices.loadTestData_users()
     .then((response) => {
-      console.log(response);
-      snackbar.value.value = true;
-      snackbar.value.color = "green";
-      snackbar.value.text = response?.data?.message || "Test data loaded successfully for USERS";
+      //  console.log(response);
+      showSnackbar(response?.data?.message || "Test data loaded successfully for USERS");
     })
     .catch((error) => {
       console.log(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = error.response?.data?.message || "Error loading test data for USERS";
+      showErrorSnackbar(error, "Error loading test data for USERS");
     });
 }
 
-async function loadTestData_pollsQuestionsAnswers() {
+async function loadTestData_polls() {
 
-  await AdminServices.loadTestData_pollsQuestionsAnswers()
+  await AdminServices.loadTestData_polls()
     .then((response) => {
-      console.log(response);
-      snackbar.value.value = true;
-      snackbar.value.color = "green";
-      snackbar.value.text = response?.data?.message || "Test data loaded successfully for POLLS";
+      //  console.log(response);
+      showSnackbar(response?.data?.message || "Test data loaded successfully for POLLS");
     })
     .catch((error) => {
       console.log(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = error.response?.data?.message || "Error loading test data for POLLS";
+      showErrorSnackbar(error, "Error loading test data for POLLS");
     });
 }
 
-function closeSnackBar() {
-  snackbar.value.value = false;
+async function loadTestData_courses() {
+
+  await AdminServices.loadTestData_courses()
+    .then((response) => {
+      //  console.log(response);
+      showSnackbar(response?.data?.message || "Test data loaded successfully for COURSES");
+    })
+    .catch((error) => {
+      console.log(error);
+      showErrorSnackbar(error, "Error loading test data for COURSES");
+    });
 }
+
 </script>
 
 <template>
@@ -70,16 +71,24 @@ function closeSnackBar() {
           <v-card class="rounded-lg elevation-5">
             <v-card-title class="headline mb-2">Test Data </v-card-title>
             <v-card-text>
+              <div class="d-flex align-center mb-5">
+                <v-btn variant="flat" color="primary" @click="loadTestData_users()">
+                  Load Users
+                </v-btn>
+              </div>
 
-              <v-btn variant="flat" color="primary" class="mb-5" @click="loadTestData_users()">
-                Load Users
-              </v-btn>
-              <v-spacer></v-spacer>
+              <div class="d-flex align-center mb-5">
+                <v-btn variant="flat" color="primary" class="mr-4" @click="loadTestData_polls()">
+                  Load Polls
+                </v-btn>
+                <span class="text-body-2 text-grey-darken-1">(Loads discussion Polls and Quizzes, AND corresponding Poll Events)</span>
+              </div>
 
-              <v-btn variant="flat" color="primary" class="mb-2" @click="loadTestData_pollsQuestionsAnswers()">
-                Load Polls (Quizzes)
-              </v-btn>
-
+              <div class="d-flex align-center">
+                <v-btn variant="flat" color="primary" @click="loadTestData_courses()">
+                  Load Courses
+                </v-btn>
+              </div>
             </v-card-text>
           </v-card>
         </v-col>
@@ -90,7 +99,7 @@ function closeSnackBar() {
         {{ snackbar.text }}
 
         <template v-slot:actions>
-          <v-btn :color="snackbar.color" variant="text" @click="closeSnackBar()">
+          <v-btn :color="snackbar.color" variant="text" @click="closeSnackbar()">
             Close
           </v-btn>
         </template>

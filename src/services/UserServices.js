@@ -1,5 +1,13 @@
 import apiClient from "./services";
 
+/*
+NOTE:
+Using try-catch blocks to catch and explictily re-throw errors, making it
+clear that any errors are propogated to the calling components.  This also
+prevents any unhandled "promise rejection" errors from displaying in the
+console.
+*/
+
 export default {
 
   getUser() {
@@ -28,24 +36,49 @@ export default {
     });
   },
 
-  logoutUser() {
-    return apiClient.post("logout");
-  },
-  
-  getUsers() {
-    return apiClient.get("users");
-  },
-
-  getUserRoles() {
-    return apiClient.get("user-roles");
+  async logoutUser() {
+    try {
+      const response = await apiClient.post("logout");
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  updateUser(id, data) {
-    return apiClient.put("users/" + id, data);
+  async getUsers() {
+    try {
+      const response = await apiClient.get("users");
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  deleteUser(id) {
-    return apiClient.delete("users/" + id);
+  async getUserRoles() {
+    try {
+      const response = await apiClient.get("user-roles");
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  async updateUser(id, data) {
+    try {
+      const response = await apiClient.put("users/" + id, data);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  async deleteUser(id) {
+    try {
+      const response = await apiClient.delete("users/" + id);
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
 };
