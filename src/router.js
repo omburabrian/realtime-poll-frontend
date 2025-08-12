@@ -67,6 +67,12 @@ const router = createRouter({
       component: () => import("./views/professor/Preferences.vue"),
       meta: { requiresAuth: true, requiresProfessor: true },
     },
+    {
+        path: "/quizCode",
+      name: "quiz-code",
+      component: () => import("./views/QuizCodeEntry.vue"),
+      meta: { requiresAuth: false, requiresProfessor: false },
+    },
     //ToDo:  Remove this POLL reference. This is a test view.
     {
       path: "/poll",
