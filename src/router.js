@@ -68,6 +68,14 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresProfessor: true },
     },
     {
+      //  ToDo:   Use this as the default landing page for all users?
+      //          Or at least student users?
+      path: "/polls/history",
+      name: "polls-history",
+      component: () => import("./views/PollsHistory.vue"),
+      //  meta: { requiresAuth: true, },
+    },
+    {
         path: "/quizCode",
       name: "quiz-code",
       component: () => import("./views/QuizCodeEntry.vue"),
@@ -84,25 +92,13 @@ const router = createRouter({
       name: "poll",
       component: () => import("./views/professor/Poll.vue"),
     },
-    //  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-    //  ToDo:  Remove RECIPE references
     {
-      path: "/recipes",
-      name: "recipes",
-      component: () => import("./views/RecipeList.vue"),
-    },
-    {
-      path: "/recipe/:id",
-      name: "editRecipe",
+      path: "/chat/:pollEventGuid",
+      name: "chat",
+      component: () => import("./components/RealtimeChat.vue"),
       props: true,
-      component: () => import("./views/EditRecipe.vue"),
+      meta: { requiresAuth: true },
     },
-    {
-      path: "/ingredients",
-      name: "ingredients",
-      component: () => import("./views/IngredientList.vue"),
-    },
-    //  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   ],
 });
 
@@ -119,14 +115,14 @@ router.beforeEach((to, from, next) => {
       next(); //  User is an admin, allow access
     } else {
       //  Not an admin or not logged in, redirect to a safe page
-      next({ name: "recipes" });
+      next({ name: "polls-history" });
     }
   } else if (to.meta.requiresProfessor) {
     if (user  &&  ((user.role === "professor") || (user.role === "admin"))) {
       next();   //  User is a professor or admin -- Allow access
     } else {
       //  Not an admin or not logged in, redirect to a safe page
-      next({ name: "recipes" });
+      next({ name: "polls-history" });
     }
   } else if (to.meta.requiresAuth  &&  !user) {
     //  If route requires login and user is not logged in, redirect to login

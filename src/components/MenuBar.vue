@@ -80,26 +80,13 @@ function isProfessor() {
   return user.value && (user.value.role === userRoles.value.PROFESSOR);
 }
 
-//  Removed RECIPE options from template, below:
-/*
-      <v-btn class="mx-2" :to="{ name: 'recipes' }">
-        Recipes
-      </v-btn>
-      <v-btn v-if="user === null" class="mx-2" :to="{ name: 'login' }">
-        Login
-      </v-btn>
-      <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'ingredients' }">
-        Ingredients
-      </v-btn>
-*/
-
 //-----------------------------------------------------------------------
 </script>
 
 <template>
   <div>
     <v-app-bar color="primary" app dark>
-      <router-link :to="{ name: 'recipes' }">
+      <router-link :to="{ name: 'polls-history' }">
         <v-img
           class="mx-2"
           :src="logoURL"

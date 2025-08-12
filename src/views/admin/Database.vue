@@ -18,20 +18,20 @@ onMounted(async () => {
 async function loadTestData_users() {
   await AdminServices.loadTestData_users()
     .then((response) => {
-      console.log(response);
+      //  console.log(response);
       showSnackbar(response?.data?.message || "Test data loaded successfully for USERS");
     })
     .catch((error) => {
-      //  console.log(error);
+      console.log(error);
       showErrorSnackbar(error, "Error loading test data for USERS");
     });
 }
 
-async function loadTestData_pollsQuestionsAnswers() {
+async function loadTestData_polls() {
 
-  await AdminServices.loadTestData_pollsQuestionsAnswers()
+  await AdminServices.loadTestData_polls()
     .then((response) => {
-      console.log(response);
+      //  console.log(response);
       showSnackbar(response?.data?.message || "Test data loaded successfully for POLLS");
     })
     .catch((error) => {
@@ -71,23 +71,24 @@ async function loadTestData_courses() {
           <v-card class="rounded-lg elevation-5">
             <v-card-title class="headline mb-2">Test Data </v-card-title>
             <v-card-text>
+              <div class="d-flex align-center mb-5">
+                <v-btn variant="flat" color="primary" @click="loadTestData_users()">
+                  Load Users
+                </v-btn>
+              </div>
 
-              <v-btn variant="flat" color="primary" class="mb-5" @click="loadTestData_users()">
-                Load Users
-              </v-btn>
+              <div class="d-flex align-center mb-5">
+                <v-btn variant="flat" color="primary" class="mr-4" @click="loadTestData_polls()">
+                  Load Polls
+                </v-btn>
+                <span class="text-body-2 text-grey-darken-1">(Loads discussion Polls and Quizzes, AND corresponding Poll Events)</span>
+              </div>
 
-              <v-spacer></v-spacer>
-
-              <v-btn variant="flat" color="primary" class="mb-5" @click="loadTestData_pollsQuestionsAnswers()">
-                Load Polls (Quizzes)
-              </v-btn>
-
-              <v-spacer></v-spacer>
-
-              <v-btn variant="flat" color="primary" class="mb-5" @click="loadTestData_courses()">
-                Load Courses
-              </v-btn>
-
+              <div class="d-flex align-center">
+                <v-btn variant="flat" color="primary" @click="loadTestData_courses()">
+                  Load Courses
+                </v-btn>
+              </div>
             </v-card-text>
           </v-card>
         </v-col>
