@@ -10,36 +10,30 @@ console.
 
 export default {
 
-  async addUser(user) {
-    try {
-
-      //  ToDo:   Even though errors are being explicitly caught and re-thrown,
-      //          any errors produced by the next line are still being displayed
-      //          to the console.  Why?
-
-      const response = await apiClient.post("users", user);
-      return response;
-    } catch (error) {
-      throw error;
-    }
+  getUser() {
+    return apiClient.get("users");
   },
 
-  async loginUser(loginCredentials) {
-    try {
-      const response = await apiClient.post("login", loginCredentials, {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-          crossDomain: true,
-          Authorization:
-            "Basic " + btoa(loginCredentials.email + ":" + loginCredentials.password),
-        },
-      });
-      return response;
-    } catch (error) {
-      throw error;
-    }
+  getUserById(id) {
+    return apiClient.get("users/" + id);
+  },
+
+  addUser(user) {
+    return apiClient.post("users", user);
+  },
+
+  loginUser(user) {
+    console.log(user);
+    return apiClient.post("login", user.value, {
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+        crossDomain: true,
+        Authorization:
+          "Basic " + btoa(user.value.email + ":" + user.value.password),
+      },
+    });
   },
 
   async logoutUser() {

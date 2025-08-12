@@ -1,6 +1,8 @@
-D<script setup>
+<script setup>
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const showDetails = ref(false);
 
 //  This (user) is the logged in current user.
@@ -38,8 +40,7 @@ function deleteUser() {
 }
 
 function navigateToEdit() {
-  alert("Edit user");
-  //  router.push({ name: "editUser", params: { id: props.aUser.id } });
+  router.push({ name: "editUser", params: { id: props.aUser.id } });
 }
 
 //----------------------------------------------------------------
@@ -53,37 +54,41 @@ function navigateToEdit() {
     <v-card-title class="headline">
       <v-row align="center">
 
-        <v-col cols="6" class="d-lg-3">
-          {{ aUser.lastName }}, {{ aUser.firstName }}
-          <v-chip class="ma-2" color="accent" label>
-            <v-icon start icon="mdi-email-outline"></v-icon>
-            {{ aUser.email }} 
-          </v-chip>
-        </v-col>
+                 <v-col cols="6" class="d-lg-3">
+           {{ aUser.lastName }}, {{ aUser.firstName }}
+           <v-chip class="ma-2" color="accent" label>
+             <v-icon start icon="mdi-email-outline"></v-icon>
+             {{ aUser.email }} 
+           </v-chip>
+           <v-chip v-if="aUser.role === 'admin'" class="ma-1" color="primary" size="small" label>
+             <v-icon start icon="mdi-shield-crown"></v-icon>
+             Admin
+           </v-chip>
+         </v-col>
 
-        <v-col cols="3" class="d-lg-2">
-          <v-select
-            v-model="aUser.role"
-            :items="userRoles"
-            label="Role"
-            density="compact"
-            hide-details
-            @update:modelValue="updateUserRole"
-            @click.stop
-            :disabled="user && user.id === aUser.id"
-            ></v-select>
-        </v-col>  
+                 <v-col cols="3" class="d-lg-2">
+           <v-select
+             v-model="aUser.role"
+             :items="userRoles"
+             label="Role"
+             density="compact"
+             hide-details
+             @update:modelValue="updateUserRole"
+             @click.stop
+             :disabled="user && (user.id === aUser.id || aUser.role === 'admin')"
+             ></v-select>
+         </v-col>  
 
         <v-col cols="1" class="d-lg-1 ml-auto mr-3">
 
-          <v-icon
-            v-if="user && user.id !== aUser.id"
-            size="small"
-            icon="mdi-delete"
-            color="error"
-            @click.stop="deleteUser()"
-            aria-label="Delete User"
-          ></v-icon>
+                     <v-icon
+             v-if="user && user.id !== aUser.id && aUser.role !== 'admin'"
+             size="small"
+             icon="mdi-delete"
+             color="error"
+             @click.stop="deleteUser()"
+             aria-label="Delete User"
+           ></v-icon>
 
           <v-icon
             v-if="user !== null"
@@ -98,7 +103,7 @@ function navigateToEdit() {
       </v-row>
     </v-card-title>
     <v-card-text class="body-1">
-      Username: &nbsp; {{ aUser.username }}
+      Username: &nbsp; {{ aUser.username || 'Not set' }}
     </v-card-text>
     <v-expand-transition>
       <v-card-text class="pt-0" v-show="showDetails">
