@@ -21,6 +21,13 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
+      path: "/admin/users/:id/edit",
+      name: "editUser",
+      props: true,
+      component: () => import("./views/admin/EditUser.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
       path: "/admin/database",
       name: "admin-database",
       component: () => import("./views/admin/Database.vue"),
