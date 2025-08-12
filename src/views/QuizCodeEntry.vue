@@ -26,7 +26,6 @@ async function doesExistPollEvent(roomCode) {
     const response = await PollEventServices.getPollEventById(roomCode);
     const pollEvent = response.data;
     const status = response.status;
-    console.log("Poll event data:", pollEvent);
 
     // Treat non-200 as not found
     if (status !== 200) return false;
@@ -76,10 +75,8 @@ async function joinQuiz() {
   const valid = await validateCode();
   if (!valid) return;
 
-  //router.push({ name: "student-quiz", params: { code: normalizedCode.value } });
+  router.push({ name: "student-quiz", params: { id: normalizedCode.value } });
 }
-
-
 
 
 

@@ -73,6 +73,11 @@ const router = createRouter({
       component: () => import("./views/QuizCodeEntry.vue"),
       meta: { requiresAuth: false, requiresProfessor: false },
     },
+    {
+      path: "/liveQuiz/student/:id",
+      name: "student-quiz",
+      component: () => import("./views/StudentLiveQuiz.vue"),
+    },
     //ToDo:  Remove this POLL reference. This is a test view.
     {
       path: "/poll",
