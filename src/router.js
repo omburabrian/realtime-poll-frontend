@@ -92,6 +92,13 @@ const router = createRouter({
       name: "poll",
       component: () => import("./views/professor/Poll.vue"),
     },
+    {
+      path: "/chat/:pollEventGuid",
+      name: "chat",
+      component: () => import("./components/RealtimeChat.vue"),
+      props: true,
+      meta: { requiresAuth: true },
+    },
   ],
 });
 
