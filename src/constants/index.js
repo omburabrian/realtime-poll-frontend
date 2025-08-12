@@ -4,11 +4,17 @@
  * accidental modification elsewhere in the code.
  */
 
+//  These must match those defined in the backend model, PollEvent.STATES.
+//  ToDo:  Get these PollEvent.STATES from the backend with a service call.
 export const PollEventStates = Object.freeze({
-    WAITING: "waiting", // Ready for participants to join
-    IN_PROGRESS: "in_progress",
-    PAUSED: "paused",
-    FINISHED: "finished",
+    READY: 'ready',
+    OPEN: 'open',
+    WAITING: 'waiting',
+    STARTED: 'started',
+    ENDED: 'ended',
+    CANCELED: 'canceled',
+    PAUSED: 'paused',
+    ERROR: 'error',
 });
 
 export const QuestionTypes = Object.freeze({
@@ -29,6 +35,8 @@ export const SOCKET_MESSAGES = Object.freeze({
 
     //  Professor Poll Event messages
 
+    OPEN_POLL_EVENT: "open_poll_event",
+    UPDATE_POLL_EVENT: "start_poll",
     START_POLL: "start_poll",
     PAUSE_POLL: "pause_poll",
     RESUME_POLL: "resume_poll",

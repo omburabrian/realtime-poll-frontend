@@ -35,7 +35,7 @@ onMounted(() => {
 
 
   //  console.log("ABOUT TO:  socket.emit(\"joinPollEvent\", props.pollEventGuid);");
-  //  console.log("props.pollEventGuid = " + props.pollEventGuid);
+  console.log("props.pollEventGuid = " + props.pollEventGuid);
 
   // Join the specific poll event's chat room on the server
   socket.emit("joinPollEvent", props.pollEventGuid);

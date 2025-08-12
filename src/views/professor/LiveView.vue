@@ -6,6 +6,12 @@ import QuestionServices from "../../services/QuestionServices";
 import { PollEventStates } from "../../constants";
 import QuizProgress from "../../components/QuizTimerComponent.vue"; // reuse your timer
 
+//  Use socket.io for real-time messaging
+import { useSocketIO } from "../../composables/useSocketIO";
+import { SOCKET_MESSAGES } from "../../constants/index";
+
+const { socket } = useSocketIO();
+
 const route = useRoute();
 
 // Core state
@@ -28,6 +34,10 @@ const duration = computed(() => poll.value?.secondsPerQuestion || 30);
 const currentQuestion = computed(() => questions.value[currentIndex.value]);
 const isLastQuestion = computed(() => currentIndex.value === questions.value.length - 1);
 
+//===============================
+//  PROFESSOR's LIVE VIEW
+//===============================
+
 //  ToDo:   Add list of POLL PARTICIPANTS (PollEventUser.userId > User)
 //          as they join the poll.
 
@@ -38,18 +48,23 @@ onMounted(async () => {
   // keyboard shortcuts
   window.addEventListener("keydown", handleKeys);
 
-
   //  ToDo:   Use socket.io to send message to backend to start load the quiz, putting it in the "waiting" state."
+  //  socket.emit(SOCKET_MESSAGES.OPEN_POLL_EVENT, props.pollEventGuid);  //  Switched from POLL EVENT GUID, FOR NOW
+
+  console.log("Professor Live View: route.params.id: " + route.params.id);
   
+
+  socket.emit(SOCKET_MESSAGES.OPEN_POLL_EVENT, route.params.id);
+  //  Have the message above change the status of the POLL EVENT TO "waiting"
 
   //  Change state of POLL EVENT to PollEventStates.WAITING
   if (pollEvent.value) {
     try {
       await PollEventServices.updatePollEvent({
         ...pollEvent.value,
-        state: PollEventStates.WAITING,
+        state: PollEventStates.OPEN,
       });
-      pollEvent.value.state = PollEventStates.WAITING; // Keep local state in sync
+      pollEvent.value.state = PollEventStates.OPEN; // Keep local state in sync
 
       //  At this point, users can start to "join" this POLL EVENT, via socket.io.
 
