@@ -106,12 +106,10 @@ function isProfessor() {
       <v-btn v-if="user === null" class="mx-2" :to="{ name: 'login' }">
         Login
       </v-btn>
-
-      <v-menu
-        v-if="user !== null && isProfessorOrAdmin()"
-        location="bottom"
-        rounded
-      >
+      <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'quiz-code' }">
+        Take Quiz
+      </v-btn>
+      <v-menu v-if="user !== null && isProfessorOrAdmin()" location="bottom" rounded>
         <template v-slot:activator="{ props }">
           <v-btn class="mx-2" v-bind="props">
             Professor <v-icon end>mdi-menu-down</v-icon>
@@ -147,9 +145,6 @@ function isProfessor() {
 
       <v-menu v-if="user !== null" min-width="200px" rounded>
         <template v-slot:activator="{ props }">
-          <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'liveQuiz' }">
-            Take Quiz
-          </v-btn>
           <v-btn
             v-if="user !== null"
             class="mx-2"

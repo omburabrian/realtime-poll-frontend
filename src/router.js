@@ -76,14 +76,20 @@ const router = createRouter({
       //  meta: { requiresAuth: true, },
     },
     {
+        path: "/quizCode",
+      name: "quiz-code",
+      component: () => import("./views/QuizCodeEntry.vue"),
+      meta: { requiresAuth: false, requiresProfessor: false },
+    },
+    {
+      path: "/liveQuiz/student/:id",
+      name: "student-quiz",
+      component: () => import("./views/StudentLiveQuiz.vue"),
+    },
+    {
       path: "/quiz-edit/:id",
       name: "quizEdit",
       component: () => import("./views/professor/QuizEdit.vue"),
-    },
-    {
-      path: "/liveQuiz",
-      name: "liveQuiz",
-      component: () => import("./views/LiveQuiz.vue"),
     },
 
     //ToDo:  Remove this POLL reference. This is a test view.

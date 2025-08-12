@@ -1,86 +1,142 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useRoute } from "vue-router";
 import QuestionServices from "../services/QuestionServices";
 import UserAnswerServices from "../services/UserAnswerServices";
 import QuizProgress from "../components/QuizTimerComponent.vue";
-import PollServices from "../services/PollServices";
 import QuizResultsCardComponent from "../components/QuizResultsCardComponent.vue";
 import AnswerServices from "../services/AnswerServices";
+import PollEventServices from "../services/PollEventServices"; // <-- use poll event
+import PollEventUserServices from "../services/PollEventUserServices";
 
+// State
 const remaining = ref(0);
 const currentIndex = ref(0);
 const questions = ref([]);
-const pollId = 3; // Hardcoded for now, will be dynamic later
-const poll = ref({});
+
+const pollEvent = ref(null);          // entire event response
+const poll = computed(() => pollEvent.value?.poll ?? {}); // nested poll
+const pollId = computed(() => poll.value?.id ?? null);    // derived id
+
 const user = ref(null);
-const pollEventUserId = ref(null); // state variable to hold pollEventUserId
+const pollEventUserId = ref(null);    // e.g., your user id for answers
 const isQuizRunning = ref(true);
 const answerText = ref("");
 const showResults = ref(false);
-const userAnswers = ref([]);
-const correctAnswers = ref([]);
+const userAnswers = ref({});
+const correctAnswers = ref({});
 
+const route = useRoute();
+
+// Derived
 const currentQuestion = computed(() => questions.value[currentIndex.value]);
 const isLastQuestion = computed(
   () => currentIndex.value === questions.value.length - 1
 );
 
+// Lifecycle
 onMounted(async () => {
-  user.value = JSON.parse(localStorage.getItem("user"));
-  pollEventUserId.value = user.value.id; // Assuming user ID is used as pollEventUserId
-  await getPoll();
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    user.value = JSON.parse(storedUser);
+    pollEventUserId.value = await getPollEventUserId(route.params.id, user.value.id);
+    console.log("Poll Event User ID:", pollEventUserId.value);
+
+  } else {
+    showSnackbar("error", "No user found");
+    return;
+  }
+
+  // Load event -> sets poll/pollId via computeds
+  const eventId = route.params.id; // usually a string
+  await loadPollEvent(eventId);
+
+  // Now that pollId is available, load questions
   await fetchAllQuestions();
   isQuizRunning.value = true;
 });
 
-async function getPoll() {
-  await PollServices.getPoll(pollId)
-    .then((response) => {
-      poll.value = response.data;
-      remaining.value = poll.value.secondsPerQuestion;
-    })
-    .catch((error) => {
-      console.log(error);
-      showSnackbar("error", "Failed to fetch polls");
-    });
+// Loaders
+async function loadPollEvent(eventId) {
+  try {
+    const { data } = await PollEventServices.getPollEventById(eventId);
+    pollEvent.value = data;
+    remaining.value = poll.value?.secondsPerQuestion ?? 30;
+    // console.log("Poll Event Data:", JSON.parse(JSON.stringify(pollEvent.value)));
+  } catch (error) {
+    console.error(error);
+    showSnackbar("error", "Failed to fetch poll event");
+  }
 }
+
+async function getPollEventUserId(pollEventId, userId) {
+  try {
+    const response = await PollEventUserServices.getByEventAndUser(
+      pollEventId,
+      userId
+    );
+    return response.data.id; // Assuming this returns the correct ID
+  } catch (error) {
+    console.error(error);
+    showSnackbar("error", "Failed to fetch poll event user ID");
+    return await addPollEventUser(pollEventId, userId);
+  }
+}
+
+async function addPollEventUser(pollEventId, userId) {
+  try {
+    const response = await PollEventUserServices.addPollEventUser({
+    userId: userId,
+    pollEventId: pollEventId,
+      
+    });
+    return response.data.id; // Assuming this returns the correct ID
+  } catch (error) {
+    console.error(error);
+    showSnackbar("error", "Failed to add poll event user");
+    return null;
+  }
+}
+
 async function fetchAllQuestions() {
-  await QuestionServices.getQuestionsForPoll(pollId)
-    .then((response) => {
-      const result = response.data || [];
-      questions.value = result.map((q) => ({
-        ...q,
-        answers: q.answers || [],
-      }));
-    })
-    .catch((error) => {
-      console.error(error);
-      showSnackbar("error", "Failed to fetch questions");
-    });
+  if (!pollId.value) return;
+  try {
+    const response = await QuestionServices.getQuestionsForPoll(pollId.value);
+    const result = response.data || [];
+    questions.value = result.map((q) => ({
+      ...q,
+      answers: q.answers || [],
+    }));
+  } catch (error) {
+    console.error(error);
+    showSnackbar("error", "Failed to fetch questions");
+  }
 }
+
 async function fetchCorrectAnswers() {
   const answersMap = {};
   for (const question of questions.value) {
     try {
       const response = await AnswerServices.getAnswersForQuestion(question.id);
-      const correct = response.data.find((ans) => ans.isCorrectAnswer);
+      const correct = (response.data || []).find((ans) => ans.isCorrectAnswer);
       if (correct) {
         answersMap[question.id] = correct.text;
-        correctAnswers.value = answersMap;
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
       showSnackbar("error", "Error fetching correct answers");
     }
   }
+  correctAnswers.value = answersMap;
 }
+
 async function fetchUserAnswers() {
   try {
     const response = await UserAnswerServices.GetUserAnswersForPoll(
       pollEventUserId.value
     );
     const answersObj = {};
-    for (const answer of response.data) {
+    for (const answer of response.data || []) {
       answersObj[answer.questionId] = answer.answer;
     }
     userAnswers.value = answersObj;
@@ -89,21 +145,23 @@ async function fetchUserAnswers() {
     showSnackbar("error", "Failed to fetch user answers");
   }
 }
+
 async function submitAnswers() {
+  const q = currentQuestion.value;
   const answerPayLoad = {
     pollEventUserId: pollEventUserId.value,
-    questionId: currentQuestion.value.id,
+    questionId: q?.id,
     answer: answerText.value,
   };
   try {
     if (!answerText.value) {
-      showSnackbar("", "No answer selected");
+      showSnackbar("error", "No answer selected");
     } else {
       await UserAnswerServices.CreateUserAnswer(answerPayLoad);
       showSnackbar("green", "Answer saved");
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
     showSnackbar("error", "Error saving answer");
   }
   nextQuestion();
@@ -119,12 +177,15 @@ function nextQuestion() {
 }
 
 function finishQuiz() {
-  showSnackbar("green", "You've reached the end of quiz");
+  showSnackbar("green", "You've reached the end of the quiz");
   isQuizRunning.value = false;
   fetchUserAnswers();
   fetchCorrectAnswers();
 }
 
+
+
+// Snackbar
 const snackbar = ref({
   value: false,
   color: "",
@@ -132,15 +193,11 @@ const snackbar = ref({
 });
 
 function showSnackbar(color, text) {
-  snackbar.value = {
-    value: true,
-    color: color,
-    text: text,
-  };
+  snackbar.value = { value: true, color, text };
 }
 
 function closeSnackBar() {
-  snackbar.value.value = false;
+  snackbar.value = { ...snackbar.value, value: false };
 }
 </script>
 
@@ -148,8 +205,9 @@ function closeSnackBar() {
   <v-container style="min-width: 320px">
     <v-row>
       <v-col cols="12">
+        <!-- Quiz Card -->
         <v-card
-          v-if="!showResults && questions.length > 0"
+          v-if="!showResults && questions.length > 0 && isQuizRunning"
           class="mt-15"
           elevation="10"
         >
@@ -166,20 +224,19 @@ function closeSnackBar() {
 
           <v-card-text class="ma-10">
             <p class="text-h6 mb-5">
-              Q{{ currentQuestion.questionNumber }}: {{ currentQuestion.text }}
+              Q{{ currentQuestion?.questionNumber }}:
+              {{ currentQuestion?.text }}
             </p>
 
-            <!------------------------------Multiple Choice Question------------------>
+            <!-- Multiple Choice -->
             <v-radio-group
-              v-if="currentQuestion.questionType === 'multiple_choice'"
+              v-if="currentQuestion?.questionType === 'multiple_choice'"
               v-model="answerText"
             >
               <div v-for="answer in currentQuestion.answers" :key="answer.id">
                 <v-card
                   class="mb-3 answer-card"
-                  :class="{
-                    'answer-card--selected': answerText === answer.text,
-                  }"
+                  :class="{ 'answer-card--selected': answerText === answer.text }"
                   variant="tonal"
                   @click="answerText = answer.text"
                 >
@@ -190,65 +247,42 @@ function closeSnackBar() {
               </div>
             </v-radio-group>
 
-            <!--------------------------------True/False Question--------------------->
-            <v-item-group
-              v-else-if="currentQuestion.questionType === 'true_false'"
+            <!-- True/False -->
+            <v-radio-group
+              v-else-if="currentQuestion?.questionType === 'true_false'"
               v-model="answerText"
             >
-              <v-item value="True">
-                <template #default="{ isSelected, toggle }">
-                  <v-card
-                    class="mb-3 answer-card"
-                    :class="{ 'answer-card--selected': isSelected }"
-                    variant="tonal"
-                    @click="toggle"
-                  >
-                    <v-card-text class="pa-3 text-center"> True </v-card-text>
-                  </v-card>
-                </template>
-              </v-item>
+              <v-radio label="True" value="True" />
+              <v-radio label="False" value="False" />
+            </v-radio-group>
 
-              <v-item value="False">
-                <template #default="{ isSelected, toggle }">
-                  <v-card
-                    class="mb-2 answer-card"
-                    :class="{ 'answer-card--selected': isSelected }"
-                    variant="tonal"
-                    @click="toggle"
-                  >
-                    <v-card-text class="py-3 text-center"> False </v-card-text>
-                  </v-card>
-                </template>
-              </v-item>
-            </v-item-group>
-
-            <!------------------------Short Answer Question-------------------->
+            <!-- Short Answer -->
             <v-textarea
-              class="ml-8"
-              v-else-if="currentQuestion.questionType === 'short_answer'"
+              v-else-if="currentQuestion?.questionType === 'short_answer'"
               v-model="answerText"
               label="Enter Answer"
               rows="3"
             />
 
-            <!-----------------------open-ended question----------------------->
+            <!-- Open Ended -->
             <v-textarea
-              class="ml-8"
-              v-else-if="currentQuestion.questionType === 'open_ended'"
+              v-else-if="currentQuestion?.questionType === 'open_ended'"
               v-model="answerText"
               label="Enter Answer"
               rows="3"
             />
           </v-card-text>
-          <v-card-actions class="justify-start pl-12"> </v-card-actions>
+
           <v-card-actions class="d-flex justify-center">
             <QuizProgress
-              :duration="poll.secondsPerQuestion"
+              :duration="poll.secondsPerQuestion || 30"
               :isRunning="isQuizRunning"
-              :questionId="currentQuestion.id"
+              :questionId="currentQuestion?.id"
               @timeUp="submitAnswers"
-            /> </v-card-actions
-          ><v-card-actions class="d-flex justify-end">
+            />
+          </v-card-actions>
+
+          <v-card-actions class="d-flex justify-end">
             <v-btn
               v-if="isLastQuestion && !isQuizRunning"
               @click="showResults = true"
@@ -258,8 +292,10 @@ function closeSnackBar() {
             </v-btn>
           </v-card-actions>
         </v-card>
+
+        <!-- Results -->
         <QuizResultsCardComponent
-          v-else="isFinished"
+          v-else
           :poll="poll"
           :questions="questions"
           :userAnswers="userAnswers"
@@ -268,9 +304,11 @@ function closeSnackBar() {
         />
       </v-col>
     </v-row>
+
+    <!-- Snackbar -->
     <v-snackbar v-model="snackbar.value" rounded="pill">
       {{ snackbar.text }}
-      <template v-slot:actions>
+      <template #actions>
         <v-btn :color="snackbar.color" variant="text" @click="closeSnackBar">
           Close
         </v-btn>
@@ -278,6 +316,7 @@ function closeSnackBar() {
     </v-snackbar>
   </v-container>
 </template>
+
 <style>
 .answer-card {
   border-radius: 2px;
