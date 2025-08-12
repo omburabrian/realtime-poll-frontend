@@ -7,7 +7,7 @@ import UserServices from "../services/UserServices";
 const router = useRouter();
 
 const user = ref(null);
-const userRoles = ref([]);    //  List of user user roles
+const userRoles = ref([]); //  List of user user roles
 const title = ref("Real-time Poll");
 const logoURL = ref("");
 
@@ -22,12 +22,17 @@ const professorMenuItems = ref([
   { title: "Professor Dashboard", name: "professor" },
   { title: "Professor Polls", name: "professor-polls" },
   { title: "Professor Preferences", name: "professor-preferences" },
+  { title: "Manage Courses", name: "professor-courses" },
 ]);
 
 onMounted(async () => {
-  await getUserRoles();
   logoURL.value = ocLogo;
   user.value = JSON.parse(localStorage.getItem("user"));
+
+  //  Must be authenticated user to get user roles.
+  if (user.value !== null) {
+    await getUserRoles();
+  }
 });
 
 function logout() {
@@ -47,44 +52,36 @@ function logout() {
 //  ToDo:  Put this in a reusable utility service.
 //  Get user user roles.
 async function getUserRoles() {
-    await UserServices.getUserRoles()
-        .then((response) => {
-            //  ROLES are defined as an array of constants.
-            userRoles.value = response.data;
-            //  console.log('userRoles.value.PROFESSOR');
-            //  console.log(userRoles.value.PROFESSOR);
-        })
-        .catch((error) => {
-            console.log(error);
-        });
+  await UserServices.getUserRoles()
+    .then((response) => {
+      //  ROLES are defined as an array of constants.
+      userRoles.value = response.data;
+      //  console.log('userRoles.value.PROFESSOR');
+      //  console.log(userRoles.value.PROFESSOR);
+    })
+    .catch((error) => {
+      let defaultMessage = "Unknown error while getting user roles";
+      const message =
+        error?.response?.data?.message || error?.message || defaultMessage;
+      //  console.log(message);
+    });
 }
 
 function isProfessorOrAdmin() {
-  return user.value &&
-    ( user.value.role === userRoles.value.PROFESSOR
-      || user.value.role === userRoles.value.ADMIN);
+  return (
+    user.value &&
+    (user.value.role === userRoles.value.PROFESSOR ||
+      user.value.role === userRoles.value.ADMIN)
+  );
 }
 
 function isAdmin() {
-  return user.value && (user.value.role === userRoles.value.ADMIN);
+  return user.value && user.value.role === userRoles.value.ADMIN;
 }
 
 function isProfessor() {
-  return user.value && (user.value.role === userRoles.value.PROFESSOR);
+  return user.value && user.value.role === userRoles.value.PROFESSOR;
 }
-
-//  Removed RECIPE options from template, below:
-/*
-      <v-btn class="mx-2" :to="{ name: 'recipes' }">
-        Recipes
-      </v-btn>
-      <v-btn v-if="user === null" class="mx-2" :to="{ name: 'login' }">
-        Login
-      </v-btn>
-      <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'ingredients' }">
-        Ingredients
-      </v-btn>
-*/
 
 //-----------------------------------------------------------------------
 </script>
@@ -92,7 +89,7 @@ function isProfessor() {
 <template>
   <div>
     <v-app-bar color="primary" app dark>
-      <router-link :to="{ name: 'recipes' }">
+      <router-link :to="{ name: 'polls-history' }">
         <v-img
           class="mx-2"
           :src="logoURL"
@@ -109,7 +106,9 @@ function isProfessor() {
       <v-btn v-if="user === null" class="mx-2" :to="{ name: 'login' }">
         Login
       </v-btn>
-
+      <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'quiz-code' }">
+        Take Quiz
+      </v-btn>
       <v-menu v-if="user !== null && isProfessorOrAdmin()" location="bottom" rounded>
         <template v-slot:activator="{ props }">
           <v-btn class="mx-2" v-bind="props">
@@ -117,7 +116,11 @@ function isProfessor() {
           </v-btn>
         </template>
         <v-list>
-          <v-list-item v-for="(item, index) in professorMenuItems" :key="index" :to="{ name: item.name }">
+          <v-list-item
+            v-for="(item, index) in professorMenuItems"
+            :key="index"
+            :to="{ name: item.name }"
+          >
             <v-list-item-title>{{ item.title }}</v-list-item-title>
           </v-list-item>
         </v-list>
@@ -140,12 +143,15 @@ function isProfessor() {
         </v-list>
       </v-menu>
 
-      <v-btn v-if="user !== null" class="mx-2" :to="{ name: 'poll' }">
-        Poll Test
-      </v-btn>
-
       <v-menu v-if="user !== null" min-width="200px" rounded>
         <template v-slot:activator="{ props }">
+          <v-btn
+            v-if="user !== null"
+            class="mx-2"
+            :to="{ name: 'polls-history' }"
+          >
+            Poll History
+          </v-btn>
           <v-btn icon v-bind="props">
             <v-avatar class="mx-auto text-center" color="accent" size="large">
               <span class="white--text font-weight-bold">{{

@@ -1,47 +1,90 @@
 import apiClient from "./services";
 
+/*
+NOTE:
+Using try-catch blocks to catch and explictily re-throw errors, making it
+clear that any errors are propogated to the calling components.  This also
+prevents any unhandled "promise rejection" errors from displaying in the
+console.
+*/
+
 export default {
 
-  getUser() {
-    return apiClient.get("users");
+  async addUser(user) {
+    try {
+
+      //  ToDo:   Even though errors are being explicitly caught and re-thrown,
+      //          any errors produced by the next line are still being displayed
+      //          to the console.  Why?
+
+      const response = await apiClient.post("users", user);
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  addUser(user) {
-    return apiClient.post("users", user);
+  async loginUser(loginCredentials) {
+    try {
+      const response = await apiClient.post("login", loginCredentials, {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          crossDomain: true,
+          Authorization:
+            "Basic " + btoa(loginCredentials.email + ":" + loginCredentials.password),
+        },
+      });
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  loginUser(loginCredentials) {
-    console.log(loginCredentials);
-    return apiClient.post("login", loginCredentials, {
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "X-Requested-With": "XMLHttpRequest",
-        crossDomain: true,
-        Authorization:
-          "Basic " + btoa(loginCredentials.email + ":" + loginCredentials.password),
-      },
-    });
+  async logoutUser() {
+    try {
+      const response = await apiClient.post("logout");
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  logoutUser() {
-    return apiClient.post("logout");
-  },
-  
-  getUsers() {
-    return apiClient.get("users");
-  },
-
-  getUserRoles() {
-    return apiClient.get("user-roles");
+  async getUsers() {
+    try {
+      const response = await apiClient.get("users");
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  updateUser(id, data) {
-    return apiClient.put("users/" + id, data);
+  async getUserRoles() {
+    try {
+      const response = await apiClient.get("user-roles");
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  deleteUser(id) {
-    return apiClient.delete("users/" + id);
+  async updateUser(id, data) {
+    try {
+      const response = await apiClient.put("users/" + id, data);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  async deleteUser(id) {
+    try {
+      const response = await apiClient.delete("users/" + id);
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
 };

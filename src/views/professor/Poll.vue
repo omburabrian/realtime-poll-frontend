@@ -7,7 +7,9 @@ import { useSnackbar } from "../../composables/useSnackbar.js";
 const user = ref(null);
 const polls = ref([]);
 const router = useRouter();
-const { snackbar, showSnackbar, closeSnackBar } = useSnackbar();
+
+//  Snackbar composable
+const { snackbar, showSnackbar, showErrorSnackbar, closeSnackbar } = useSnackbar();
 
 onMounted(async () => {
   user.value = JSON.parse(localStorage.getItem("user"));
@@ -73,10 +75,11 @@ function navigateToEdit(pollId) {
       {{ snackbar.text }}
 
       <template v-slot:actions>
-        <v-btn :color="snackbar.color" variant="text" @click="closeSnackBar()">
+        <v-btn :color="snackbar.color" variant="text" @click="closeSnackbar()">
           Close
         </v-btn>
       </template>
     </v-snackbar>
+
   </v-container>
 </template>
