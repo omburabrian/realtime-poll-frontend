@@ -5,17 +5,15 @@ import UserAnswerServices from "../services/UserAnswerServices";
 import QuizProgress from "../components/QuizTimerComponent.vue";
 import PollServices from "../services/PollServices";
 import QuizResultsCardComponent from "../components/QuizResultsCardComponent.vue";
-import { useRouter } from "vue-router";
 import AnswerServices from "../services/AnswerServices";
 
 const remaining = ref(0);
 const currentIndex = ref(0);
 const questions = ref([]);
-const pollId = 1;
-const router = useRouter();
+const pollId = 3; // Hardcoded for now, will be dynamic later
 const poll = ref({});
 const user = ref(null);
-const pollEventUserId = ref(null);
+const pollEventUserId = ref(null); // state variable to hold pollEventUserId
 const isQuizRunning = ref(true);
 const answerText = ref("");
 const showResults = ref(false);
@@ -29,8 +27,7 @@ const isLastQuestion = computed(
 
 onMounted(async () => {
   user.value = JSON.parse(localStorage.getItem("user"));
-  pollEventUserId.value = user.value.id;
-  //pollId = router.params.id //:ToDo - get pollId from router
+  pollEventUserId.value = user.value.id; // Assuming user ID is used as pollEventUserId
   await getPoll();
   await fetchAllQuestions();
   isQuizRunning.value = true;
@@ -50,8 +47,8 @@ async function getPoll() {
 async function fetchAllQuestions() {
   await QuestionServices.getQuestionsForPoll(pollId)
     .then((response) => {
-      const data = response.data || [];
-      questions.value = data.map((q) => ({
+      const result = response.data || [];
+      questions.value = result.map((q) => ({
         ...q,
         answers: q.answers || [],
       }));
@@ -69,31 +66,28 @@ async function fetchCorrectAnswers() {
       const correct = response.data.find((ans) => ans.isCorrectAnswer);
       if (correct) {
         answersMap[question.id] = correct.text;
+        correctAnswers.value = answersMap;
       }
     } catch (error) {
       console.log(error);
-      showSnackbar(
-        "error",
-        "Error fetching answers for question ID: " + question.id
-      );
+      showSnackbar("error", "Error fetching correct answers");
     }
   }
-  correctAnswers.value = answersMap;
-  console.log("Correct answers map:", correctAnswers.value);
 }
 async function fetchUserAnswers() {
-  await UserAnswerServices.GetUserAnswersForPoll(pollEventUserId.value)
-    .then((response) => {
-      userAnswers.value = response.data.reduce((acc, answer) => {
-        acc[answer.questionId] = answer.answer;
-        return acc;
-      }, {});
-      console.log("Mapped answers:", userAnswers.value);
-    })
-    .catch((error) => {
-      console.error(error);
-      showSnackbar("error", "Failed to fetch user answers");
-    });
+  try {
+    const response = await UserAnswerServices.GetUserAnswersForPoll(
+      pollEventUserId.value
+    );
+    const answersObj = {};
+    for (const answer of response.data) {
+      answersObj[answer.questionId] = answer.answer;
+    }
+    userAnswers.value = answersObj;
+  } catch (error) {
+    console.error(error);
+    showSnackbar("error", "Failed to fetch user answers");
+  }
 }
 async function submitAnswers() {
   const answerPayLoad = {
@@ -103,7 +97,7 @@ async function submitAnswers() {
   };
   try {
     if (!answerText.value) {
-      showSnackbar("error", "No answer saved");
+      showSnackbar("", "No answer selected");
     } else {
       await UserAnswerServices.CreateUserAnswer(answerPayLoad);
       showSnackbar("green", "Answer saved");
@@ -232,6 +226,15 @@ function closeSnackBar() {
             <v-textarea
               class="ml-8"
               v-else-if="currentQuestion.questionType === 'short_answer'"
+              v-model="answerText"
+              label="Enter Answer"
+              rows="3"
+            />
+
+            <!-----------------------open-ended question----------------------->
+            <v-textarea
+              class="ml-8"
+              v-else-if="currentQuestion.questionType === 'open_ended'"
               v-model="answerText"
               label="Enter Answer"
               rows="3"

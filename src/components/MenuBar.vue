@@ -155,7 +155,7 @@ function isProfessor() {
             class="mx-2"
             :to="{ name: 'polls-history' }"
           >
-            History
+            Poll History
           </v-btn>
           <v-btn icon v-bind="props">
             <v-avatar class="mx-auto text-center" color="accent" size="large">
