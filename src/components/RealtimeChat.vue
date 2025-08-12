@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { useSocketIO } from "../composables/useSocketIO";
 import { useSnackbar } from "../composables/useSnackbar.js";
+import { SOCKET_MESSAGES } from "../constants/index.js";
 
 const { socket } = useSocketIO();
 const { showErrorSnackbar } = useSnackbar();
@@ -31,17 +32,48 @@ watch(
 );
 
 onMounted(() => {
+
+
+  //  console.log("ABOUT TO:  socket.emit(\"joinPollEvent\", props.pollEventGuid);");
+  //  console.log("props.pollEventGuid = " + props.pollEventGuid);
+
   // Join the specific poll event's chat room on the server
   socket.emit("joinPollEvent", props.pollEventGuid);
 
+
+  //  console.log("SOCKET_MESSAGES.NEW_MESSAGE = " + SOCKET_MESSAGES.NEW_MESSAGE);
+  //  console.log("SOCKET_MESSAGES.SEND_MESSAGE = " + SOCKET_MESSAGES.SEND_MESSAGE);
+
+  // The line `messages.value.push("Just display something")` caused the "User:"
+  // display because it's a string, but the template expects an object.
+  // To test the display, you would use an object like this:
+  // messages.value.push({ user: { firstName: 'System' }, message: 'Chat connected.', timestamp: new Date().toISOString() });
+
+
+  //  messages.value.push({ user: { firstName: 'System' }, message: 'Chat connected.', timestamp: new Date().toISOString() });
+
+
   // Listen for new messages broadcasted from the server
-  socket.on("newMessage", (message) => {
+  socket.on(SOCKET_MESSAGES.NEW_MESSAGE, (message) => {
+  //  socket.on("newMessage", (message) => {
+
+
+
+    console.log("Received message via socket (SOCKET_MESSAGES.NEW_MESSAGE): ", message);
+
+
     messages.value.push(message);
   });
 
   // Optional: Listen for any chat-specific errors from the server
   socket.on("chatError", (errorMsg) => {
     showErrorSnackbar(errorMsg, "Chat Error");
+  });
+
+  // Listen for generic errors from the socket server (e.g., failed to join room)
+  socket.on("error", (error) => {
+    console.error("Socket error received:", error);
+    showErrorSnackbar(error.message || "A socket error occurred", "Error");
   });
 });
 
@@ -50,7 +82,8 @@ onUnmounted(() => {
   socket.emit("leavePollEvent", props.pollEventGuid);
 
   // Clean up the event listeners to prevent memory leaks
-  socket.off("newMessage");
+  socket.off("error");
+  socket.off(SOCKET_MESSAGES.NEW_MESSAGE);
   socket.off("chatError");
 });
 
@@ -62,8 +95,12 @@ function sendMessage() {
     message: newMessage.value,
   };
 
+  console.log("Sending message:", payload);
+  console.log("SOCKET_MESSAGES.NEW_MESSAGE = " + SOCKET_MESSAGES.NEW_MESSAGE);
+  console.log("SOCKET_MESSAGES.SEND_MESSAGE = " + SOCKET_MESSAGES.SEND_MESSAGE);
+
   // Send the message directly to the server via WebSocket
-  socket.emit("newMessage", payload);
+  socket.emit(SOCKET_MESSAGES.SEND_MESSAGE, payload);
   newMessage.value = "";
 }
 </script>

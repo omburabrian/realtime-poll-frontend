@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useRoute } from "vue-router";
 import PollEventServices from "../../services/PollEventServices";
 import QuestionServices from "../../services/QuestionServices";
+import { PollEventStates } from "../../constants";
 import QuizProgress from "../../components/QuizTimerComponent.vue"; // reuse your timer
 
 const route = useRoute();
@@ -27,12 +28,37 @@ const duration = computed(() => poll.value?.secondsPerQuestion || 30);
 const currentQuestion = computed(() => questions.value[currentIndex.value]);
 const isLastQuestion = computed(() => currentIndex.value === questions.value.length - 1);
 
+//  ToDo:   Add list of POLL PARTICIPANTS (PollEventUser.userId > User)
+//          as they join the poll.
+
 // Lifecycle
 onMounted(async () => {
   await loadPollEvent(route.params.id);
   await fetchAllQuestions();
   // keyboard shortcuts
   window.addEventListener("keydown", handleKeys);
+
+
+  //  ToDo:   Use socket.io to send message to backend to start load the quiz, putting it in the "waiting" state."
+  
+
+  //  Change state of POLL EVENT to PollEventStates.WAITING
+  if (pollEvent.value) {
+    try {
+      await PollEventServices.updatePollEvent({
+        ...pollEvent.value,
+        state: PollEventStates.WAITING,
+      });
+      pollEvent.value.state = PollEventStates.WAITING; // Keep local state in sync
+
+      //  At this point, users can start to "join" this POLL EVENT, via socket.io.
+
+
+    } catch (error) {
+      console.error("Failed to update poll event state:", error);
+      showSnackbar("error", "Failed to set poll to waiting state.");
+    }
+  }
 });
 
 onBeforeUnmount(() => {
