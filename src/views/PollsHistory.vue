@@ -1,7 +1,6 @@
 <script setup>
 import { onMounted } from "vue";
 import { ref, computed } from "vue";
-import PollServices from "../services/PollServices.js";
 import PollEventUserServices from "../services/PollEventUserServices.js";
 
 const user = ref(null);
@@ -27,8 +26,8 @@ async function getPollHistoryForUser() {
         dateTaken: item.createdAt || null,
       }));
 
-      console.log(userPolls.value);
-      console.log(JSON.stringify(response.data, null, 2));
+      // console.log(userPolls.value);
+      // console.log(JSON.stringify(response.data, null, 2));
     })
     .catch((error) => {
       console.error(error);
