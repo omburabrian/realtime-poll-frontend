@@ -1,11 +1,11 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { useRoute,useRouter } from "vue-router";
+import { ref, computed, onMounted, onBeforeUnmount, onUnmounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import PollEventServices from "../../services/PollEventServices";
 import QuestionServices from "../../services/QuestionServices";
+import UserAnswerServices from "../../services/UserAnswerServices";
 import QuizProgress from "../../components/QuizTimerComponent.vue"; // reuse your timer
 import QRCode from "../../components/QRCode.vue";
-
 
 const pollLink = ref("www.example.com"); // full URL for students to join
 const route = useRoute();
@@ -31,6 +31,55 @@ const duration = computed(() => poll.value?.secondsPerQuestion || 30);
 const currentQuestion = computed(() => questions.value[currentIndex.value]);
 const isLastQuestion = computed(() => currentIndex.value === questions.value.length - 1);
 
+// --- Live Results (polling / tally) ---
+const results = ref({ byAnswerId: {}, total: 0 });
+const resultsPoller = ref(null);
+
+const options = computed(() =>
+  (currentQuestion.value?.answers ?? []).map(a => ({
+    id: a.id,
+    label: a.text ?? a.optionText ?? a.value ?? `Option ${a.id}`,
+  }))
+);
+
+const counts = computed(() => options.value.map(o => results.value.byAnswerId[o.id] ?? 0));
+const totalResponses = computed(() => results.value.total);
+
+async function fetchEventAnswersAndTally() {
+  const evId = pollEvent.value?.id;
+  const qid = currentQuestion.value?.id;
+  if (!evId || !qid) return;
+
+  try {
+    
+    const { data } = await UserAnswerServices.getAnswersByPollEvent(evId);
+    console.log("Fetched answers for event:", data);
+    const rows = (data ?? []).filter(a => a.questionId === qid);
+
+    const byAnswerId = {};
+    for (const row of rows) {
+      if (row?.answerId != null) {
+        byAnswerId[row.answerId] = (byAnswerId[row.answerId] ?? 0) + 1;
+      }
+    }
+    results.value = { byAnswerId, total: rows.length };
+  } catch (e) {
+    console.error("fetchEventAnswersAndTally error", e);
+  }
+}
+
+function startResultsPolling() {
+  stopResultsPolling();
+  fetchEventAnswersAndTally(); // immediate first render
+  resultsPoller.value = setInterval(fetchEventAnswersAndTally, 2000);
+}
+function stopResultsPolling() {
+  if (resultsPoller.value) {
+    clearInterval(resultsPoller.value);
+    resultsPoller.value = null;
+  }
+}
+
 // Lifecycle
 onMounted(async () => {
   await loadPollEvent(route.params.id);
@@ -44,17 +93,25 @@ onMounted(async () => {
 // generate full URL for sharing
 function getStudentLiveUri(eventId, router) {
   const href = router.resolve({
-    name: "student-quiz", 
+    name: "student-quiz",
     params: { id: String(eventId) }
-  }).href;    
-  console.log("Generated student live URI:", new URL(href, window.location.origin).toString());                  
+  }).href;
+  console.log("Generated student live URI:", new URL(href, window.location.origin).toString());
   return new URL(href, window.location.origin).toString();
 }
 
-
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeys);
+  stopResultsPolling();
 });
+onUnmounted(stopResultsPolling);
+
+// restart results polling when question changes or when you pause/resume/finish
+watch([currentQuestion, isTimerRunning], () => {
+  stopResultsPolling();
+  results.value = { byAnswerId: {}, total: 0 }; // clear old bars for visual clarity
+  if (currentQuestion.value && isTimerRunning.value) startResultsPolling();
+}, { immediate: true });
 
 // Loaders
 async function loadPollEvent(eventId) {
@@ -103,6 +160,7 @@ function endQuiz() {
   isFinished.value = true;
   isPaused.value = false;
   isStarted.value = false;
+  stopResultsPolling();
 }
 
 function prevQuestion() {
@@ -182,11 +240,8 @@ function closeSnackBar() {
               class="mb-6"
             />
             <v-card class="pa-6">
-                <div class="text-h6 mb-4">Join this quiz</div>
-                <QRCode
-                :value="pollLink" 
-                :size="200"
-                />
+              <div class="text-h6 mb-4">Join this quiz</div>
+              <QRCode :value="pollLink" :size="200" />
             </v-card>
             <v-btn
               color="primary"
@@ -218,7 +273,7 @@ function closeSnackBar() {
     <!-- Live Display -->
     <v-row v-else>
       <v-col cols="12">
-        <v-card class="mt-6 elevation-8">
+        <v-card class="mt-6 elevation-8" style="position: relative;">
           <!-- Header -->
           <v-card color="primary" class="rounded-lg">
             <v-card-title class="d-flex pa-5 align-center">
@@ -249,6 +304,42 @@ function closeSnackBar() {
               </div>
               <div class="text-h4 font-weight-bold" style="line-height: 1.3">
                 {{ currentQuestion?.text }}
+              </div>
+            </div>
+          </v-card-text>
+
+          <!-- Live Results -->
+          <v-card-text class="pt-0 pb-8">
+            <div v-if="currentQuestion">
+              <div class="text-subtitle-1 mb-2">
+                Live Results — Q{{ currentQuestion?.questionNumber }}
+                <span v-if="totalResponses"> (Responses: {{ totalResponses }})</span>
+              </div>
+
+              <div
+                v-for="(opt, i) in options"
+                :key="opt.id"
+                class="d-flex align-center mb-3"
+                style="gap:12px"
+              >
+                <div style="width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  {{ opt.label }}
+                </div>
+
+                <v-progress-linear
+                  :model-value="totalResponses ? Math.round((counts[i] / totalResponses) * 100) : 0"
+                  height="18"
+                  rounded
+                  striped
+                />
+
+                <div style="width:72px; text-align:right;">
+                  {{ counts[i] ?? 0 }}
+                </div>
+              </div>
+
+              <div v-if="!options.length" class="text-medium-emphasis">
+                No options for this question.
               </div>
             </div>
           </v-card-text>
@@ -313,10 +404,6 @@ function closeSnackBar() {
       </template>
     </v-snackbar>
   </v-container>
-
-  
-  
-
 </template>
 
 <style scoped>

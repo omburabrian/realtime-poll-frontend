@@ -11,4 +11,8 @@ export default {
   GetUserAnswersForPoll(pollEventUserId) {
     return apiClient("/user-answers/poll-event-user/" + pollEventUserId);
   },
+  getAnswersByPollEvent(pollEventId) {
+    return apiClient.get("/user-answers/poll-event/" + pollEventId);
+  }
 };
+
