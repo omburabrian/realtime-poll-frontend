@@ -68,6 +68,12 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresProfessor: true },
     },
     {
+      path: "/professor/quiz-manager",
+      name: "quiz-manager",
+      component: () => import("./views/professor/QuizManager.vue"),
+      meta: { requiresAuth: true, requiresProfessor: true },
+    },
+    {
       //  ToDo:   Use this as the default landing page for all users?
       //          Or at least student users?
       path: "/polls/history",
@@ -85,6 +91,19 @@ const router = createRouter({
       path: "/chat/:pollEventGuid",
       name: "chat",
       component: () => import("./components/RealtimeChat.vue"),
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/take-quiz",
+      name: "take-quiz-waiting",
+      component: () => import("./views/student/TakeQuiz.vue"),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/take-quiz/:sessionId/q/:questionNumber",
+      name: "take-quiz",
+      component: () => import("./views/student/TakeQuiz.vue"),
       props: true,
       meta: { requiresAuth: true },
     },

@@ -21,6 +21,7 @@ const adminMenuItems = ref([
 const professorMenuItems = ref([
   { title: "Professor Dashboard", name: "professor" },
   { title: "Professor Polls", name: "professor-polls" },
+  { title: "Quiz Manager", name: "quiz-manager" },
   { title: "Professor Preferences", name: "professor-preferences" },
   { title: "Manage Courses", name: "professor-courses" },
 ]);
@@ -102,6 +103,27 @@ function isProfessor() {
 
       <v-btn v-if="user === null" class="mx-2" :to="{ name: 'login' }">
         Login
+      </v-btn>
+
+      <!-- Student navigation -->
+      <v-btn 
+        v-if="user !== null && !isProfessorOrAdmin()" 
+        class="mx-2" 
+        :to="{ name: 'take-quiz-waiting' }"
+        color="white"
+        variant="outlined"
+      >
+        Take Quiz
+      </v-btn>
+      
+      <v-btn 
+        v-if="user !== null && !isProfessorOrAdmin()" 
+        class="mx-2" 
+        :to="{ name: 'polls-history' }"
+        color="white"
+        variant="text"
+      >
+        History
       </v-btn>
 
       <v-menu v-if="user !== null && isProfessorOrAdmin()" location="bottom" rounded>
