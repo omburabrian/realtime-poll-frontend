@@ -62,8 +62,8 @@ function navigateToEdit(pollId) {
 async function navigateToStart(pollId) {
   const pollEvent = await addPollEvent({
     pollId: pollId,
-    name: "props.poll.name",
-    description: "active",
+    name: props.poll.name,
+    //  description: "active",
   });
   router.push({ name: "professor-quiz", params: { id: pollEvent.id } });
 }
