@@ -24,14 +24,14 @@ export default {
 
   loginUser(user) {
     console.log(user);
-    return apiClient.post("login", user.value, {
+    return apiClient.post("login", user, {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
         "X-Requested-With": "XMLHttpRequest",
         crossDomain: true,
         Authorization:
-          "Basic " + btoa(user.value.email + ":" + user.value.password),
+          "Basic " + btoa(user.email + ":" + user.password),
       },
     });
   },
