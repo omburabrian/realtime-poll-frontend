@@ -22,6 +22,7 @@ export default {
     return apiClient.post("users", user);
   },
 
+  // fixed login error
   async loginUser(loginCredentials) {
     try {
       const response = await apiClient.post("login", loginCredentials, {
