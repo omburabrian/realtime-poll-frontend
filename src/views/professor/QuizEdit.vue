@@ -610,6 +610,10 @@ async function checkForGeneratedQuestions() {
                   persistent-hint
                 />
               </v-col>
+              <v-radio-group v-model="poll.isQuiz" inline label="Type">
+                  <v-radio label="Poll" :value="false" />
+                  <v-radio label="Quiz" :value="true" />
+              </v-radio-group>
             </v-row>
           </v-card-text>
 
