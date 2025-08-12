@@ -1,11 +1,15 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute,useRouter } from "vue-router";
 import PollEventServices from "../../services/PollEventServices";
 import QuestionServices from "../../services/QuestionServices";
 import QuizProgress from "../../components/QuizTimerComponent.vue"; // reuse your timer
+import QRCode from "../../components/QRCode.vue";
 
+
+const pollLink = ref("www.example.com"); // full URL for students to join
 const route = useRoute();
+const router = useRouter();
 
 // Core state
 const pollEvent = ref(null);
@@ -31,9 +35,22 @@ const isLastQuestion = computed(() => currentIndex.value === questions.value.len
 onMounted(async () => {
   await loadPollEvent(route.params.id);
   await fetchAllQuestions();
+  pollLink.value = getStudentLiveUri(route.params.id, router);
+  console.log("Poll Link URI:", pollLink.value);
   // keyboard shortcuts
   window.addEventListener("keydown", handleKeys);
 });
+
+// generate full URL for sharing
+function getStudentLiveUri(eventId, router) {
+  const href = router.resolve({
+    name: "student-quiz", 
+    params: { id: String(eventId) }
+  }).href;    
+  console.log("Generated student live URI:", new URL(href, window.location.origin).toString());                  
+  return new URL(href, window.location.origin).toString();
+}
+
 
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeys);
@@ -164,6 +181,13 @@ function closeSnackBar() {
               label="Auto-advance when time ends"
               class="mb-6"
             />
+            <v-card class="pa-6">
+                <div class="text-h6 mb-4">Join this quiz</div>
+                <QRCode
+                :value="pollLink" 
+                :size="200"
+                />
+            </v-card>
             <v-btn
               color="primary"
               size="x-large"
@@ -289,6 +313,10 @@ function closeSnackBar() {
       </template>
     </v-snackbar>
   </v-container>
+
+  
+  
+
 </template>
 
 <style scoped>
