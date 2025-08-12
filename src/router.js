@@ -91,11 +91,6 @@ const router = createRouter({
       name: "quizEdit",
       component: () => import("./views/professor/QuizEdit.vue"),
     },
-    {
-      path: "/liveQuiz",
-      name: "liveQuiz",
-      component: () => import("./views/LiveQuiz.vue"),
-    },
 
     //ToDo:  Remove this POLL reference. This is a test view.
     {

@@ -15,12 +15,6 @@ const normalizedCode = computed(() =>
   roomCode.value.trim().replace(/\s+/g, "").toUpperCase()
 );
 
-const directLink = computed(() =>
-  normalizedCode.value
-    ? `${window.location.origin}/quiz/${normalizedCode.value}`
-    : ""
-);
-
 async function doesExistPollEvent(roomCode) {
   try {
     const response = await PollEventServices.getPollEventById(roomCode);
