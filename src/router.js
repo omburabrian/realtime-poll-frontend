@@ -105,7 +105,13 @@ const router = createRouter({
       props: true,
       meta: { requiresAuth: true },
     },
+    {
+      path: "/liveQuiz/professor/:id",
+      name: "professor-quiz",
+      component: () => import("./views/professor/LiveView.vue"),
+    },
   ],
+  
 });
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

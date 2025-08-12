@@ -2,6 +2,7 @@
 import { onMounted, ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import PollQuestionServices from "../services/PollQuestionServices.js";
+import PollEventServices from "../services/PollEventServices.js";
 import PollServices from "../services/PollServices.js";
 import { defineEmits } from "vue";
 const emit = defineEmits(["delete"]);
@@ -42,13 +43,29 @@ async function PollDelete(pollId) {
   }
 }
 
+async function addPollEvent(pollEvent ){
+  try {
+    const response = await PollEventServices.addPollEvent(pollEvent);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to create poll event:", error);
+  }
+
+  
+}
+
 function navigateToEdit(pollId) {
   if (!pollId) return;
   router.push({ name: "quizEdit", params: { id: pollId } });
 }
 
-function navigateToStart() {
-  // Optional: implement start screen navigation
+async function navigateToStart(pollId) {
+  const pollEvent = await addPollEvent({
+    pollId: pollId,
+    name: "props.poll.name",
+    description: "active",
+  });
+  router.push({ name: "professor-quiz", params: { id: pollEvent.id } });
 }
 
 const totalTime = computed(() => {
@@ -100,7 +117,7 @@ const totalTime = computed(() => {
       <!-- Right: Actions -->
       <v-col cols="12" md="3" class="d-flex justify-end">
 
-        <v-btn icon variant="text" @click="navigateToStart">
+        <v-btn icon variant="text" @click="navigateToStart(poll.id)">
           <v-icon icon="mdi-play" />
         </v-btn>
         <v-btn icon variant="text" @click="navigateToEdit(poll.id)">
